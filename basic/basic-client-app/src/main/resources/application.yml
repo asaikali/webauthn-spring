@@ -10,4 +10,4 @@ management:
       exposure:
         include: "*" # don't do this in production, it can be a security risk to expose too much.
 server:
-  port: 9090
+  port: 8080

@@ -22,6 +22,7 @@
 
   <modules>
     <module>basic-auth-server</module>
+    <module>basic-client-app</module>
   </modules>
 
   <dependencies>
