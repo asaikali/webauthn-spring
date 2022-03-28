@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 class RootController {
 
   @GetMapping("/")
-  String get(){
+  String get() {
     return "This is the basic-auth-server where the current time is: " + LocalDateTime.now();
   }
 }
