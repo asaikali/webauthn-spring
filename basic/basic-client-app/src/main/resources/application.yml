@@ -22,9 +22,9 @@ spring:
             client-id: "quotes"
             client-secret: "abc123"
             authorization-grant-type: authorization_code
-            redirect-uri: "http://127.0.0.1:8080/"
+            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
             scope: openid
         provider:
           spring:
-            authorization-uri: http://127.0.0.1:9090/oauth2/authorize
-            token-uri: http://127.0.0.1:9090/oauth2/token
+            authorization-uri: http://localhost:9090/oauth2/authorize
+            token-uri: http://localhost:9090/oauth2/token
