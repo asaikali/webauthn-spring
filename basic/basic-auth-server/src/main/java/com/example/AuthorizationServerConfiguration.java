@@ -26,6 +26,16 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfiguration {
 
+  /**
+   * The authorization server defines a set of api endpoints that are invoked by client
+   * applications following the rules of the OpenID Connect and OAuth2 protocols. The auth
+   * server endpoints have their own security rules that must be enforced. Enforcement is done
+   * by creating a SecurityFilterChain and configuring it correctly.  To make things easy
+   * the Spring Auth server provides a helper method to apply the default configuration
+   * for security to the end points.
+   *
+   * The @Order anotation is used here because ??
+   */
   @Bean
   @Order(Ordered.HIGHEST_PRECEDENCE)
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
@@ -34,6 +44,18 @@ class AuthorizationServerConfiguration {
     return http.formLogin(Customizer.withDefaults()).build();
   }
 
+  /**
+   * The authorization server produces JWT tokens that are digitally signed. So the
+   * auth server needs public-private key pair to use sign JWT tokens that it issues.
+   * This method is used to provides a list of key pairs for JWT token signing.
+   *
+   * In this sample application we are generating a key pair everytime the auth server
+   * starts. However, in a real world scenario you will need to store the auth server
+   * sigining keys in a secure location such as a key vault.
+   *
+   *
+   * @return
+   */
   @Bean
   public JWKSource<SecurityContext> jwkSource() {
     RSAKey rsaKey = Jwks.generateRsa();
@@ -43,6 +65,7 @@ class AuthorizationServerConfiguration {
 
   /**
    * only needed for the UserInfoEndpoint and dynamic client registeration.
+   * why?
    *
    * @return
    */
@@ -51,12 +74,20 @@ class AuthorizationServerConfiguration {
     return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
   }
 
+  /**
+   * What is provider settings and why do we need it? Is the provider setting used to
+   * generate the /.well-known/openid-configuration object and this is why we need
+   * this section?
+   *
+   * @return
+   */
   @Bean
   public ProviderSettings providerSettings() {
     return ProviderSettings.builder().build();
   }
 
   /**
+   *
    * The authorization server only talks to applications it knows about. The auth server
    * keeps track of a known application using a RegisteredClient object. The Registered client
    * object needs to be persisted in database but the auth server does not want to dictate a
