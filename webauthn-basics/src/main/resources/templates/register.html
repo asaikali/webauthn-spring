@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create a new Account</title>
+  <script src="/js/jquery/jquery-3.6.0.min.js"></script>
+  <meta th:name="_csrf" th:content="${_csrf.token}"/>
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+
+<H1>Create a new account</H1>
+
+<form id="registerForm">
+  <div>
+    <input id="fullName" type="text" name="fullName" placeholder="Full name"/>
+  </div>
+  <div>
+    <input id="email" type="email" name="email" placeholder="email"/>
+  </div>
+  <button type="submit">
+    Submit
+  </button>
+</form>
+
+<script>
+
+    $(document).ready(function () {
+        $("#registerForm").submit(function (event) {
+            var formData = {
+                name: $("#fullName").val(),
+                email: $("#email").val()
+            };
+
+            $.ajax({
+                type: "POST",
+                url: "/users/register",
+                data: JSON.stringify(formData),
+                contentType: "application/json",
+                beforeSend: function( xhr ) {
+                    var token = $("meta[name='_csrf']").attr("content");
+                    var header = $("meta[name='_csrf_header']").attr("content");
+                    xhr.setRequestHeader(header, token);
+                }
+            }).done(function (data) {
+                console.log(data);
+            });
+
+            event.preventDefault();
+        });
+    });
+
+    // $(() => {
+    //     // function will get executed
+    //     // on click of submit button
+    //     $("#registerButton").click(function(ev) {
+    //         var form = $("#registerForm");
+    //         var url = form.attr('action');
+    //         $.ajax({
+    //             type: "POST",
+    //             url: url,
+    //             data: form.serialize(),
+    //             success: function(data) {
+    //
+    //                 // Ajax call completed successfully
+    //                 alert("Form Submited Successfully");
+    //             },
+    //             error: function(data) {
+    //
+    //                 // Some error in ajax call
+    //                 alert("some Error");
+    //             }
+    //         });
+    //     });
+    // });
+
+
+
+</script>
+</body>
+</html>

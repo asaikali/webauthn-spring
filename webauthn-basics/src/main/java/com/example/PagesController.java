@@ -14,9 +14,9 @@ class PagesController {
     return "index";
   }
 
-  @GetMapping("/signup")
+  @GetMapping("/register")
   String signup() {
-    return "signup";
+    return "register";
   }
 
   @GetMapping("/login")

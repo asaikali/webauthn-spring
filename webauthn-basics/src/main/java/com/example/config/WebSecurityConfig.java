@@ -27,7 +27,7 @@ public class WebSecurityConfig {
   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeRequests(authorizeRequests ->
             authorizeRequests
-                .mvcMatchers("/", "/signup").permitAll()
+                .mvcMatchers("/", "/register", "/users/register", "favicon.ico").permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                 .anyRequest().authenticated());
 
