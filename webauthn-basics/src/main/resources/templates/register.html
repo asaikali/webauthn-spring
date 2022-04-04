@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Create a new Account</title>
   <script src="/js/jquery/jquery-3.6.0.min.js"></script>
+
+  <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
   <meta th:name="_csrf" th:content="${_csrf.token}"/>
   <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
@@ -23,58 +25,112 @@
   </button>
 </form>
 
+
 <script>
 
+    /**
+     * Read the values from the form on the page and then call the server, to
+     * get a configuration settings to use when calling the WebAuthentication
+     * API
+     */
     $(document).ready(function () {
         $("#registerForm").submit(function (event) {
-            var formData = {
-                name: $("#fullName").val(),
+            const formData = {
+                fullName: $("#fullName").val(),
                 email: $("#email").val()
             };
-
-            $.ajax({
-                type: "POST",
-                url: "/users/register",
-                data: JSON.stringify(formData),
-                contentType: "application/json",
-                beforeSend: function( xhr ) {
-                    var token = $("meta[name='_csrf']").attr("content");
-                    var header = $("meta[name='_csrf_header']").attr("content");
-                    xhr.setRequestHeader(header, token);
-                }
-            }).done(function (data) {
-                console.log(data);
-            });
-
+            startRegistration(formData);
             event.preventDefault();
         });
     });
 
-    // $(() => {
-    //     // function will get executed
-    //     // on click of submit button
-    //     $("#registerButton").click(function(ev) {
-    //         var form = $("#registerForm");
-    //         var url = form.attr('action');
-    //         $.ajax({
-    //             type: "POST",
-    //             url: url,
-    //             data: form.serialize(),
-    //             success: function(data) {
-    //
-    //                 // Ajax call completed successfully
-    //                 alert("Form Submited Successfully");
-    //             },
-    //             error: function(data) {
-    //
-    //                 // Some error in ajax call
-    //                 alert("some Error");
-    //             }
-    //         });
-    //     });
-    // });
+    /**
+     * Call the server with the form data fields converted to a JSON
+     * object, the server will return a JSON object containing all
+     * the settings that are needed to sucessfully call the browsers
+     * WebAuthn API to generate the public / private key pair in the
+     * authenticator device.
+     *
+     * @param formData an object containing the form values to send to the server.
+     */
+    function startRegistration(formData) {
+        logTitle("Step 0: Start the registration process with the server")
+        logRequest(formData)
+        $.ajax({
+            type: "POST",
+            url: "/users/register/start",
+            data: JSON.stringify(formData),
+            dataType: "json",
+            contentType: "application/json",
+            beforeSend: function( xhr ) {
+                // spring security has CSRF protection turned on, if we don't
+                // set the correct CSRF header and value spring security will
+                // block the request from getting to the Spring MVC controller
+                // that will process this request.
+                const token = $("meta[name='_csrf']").attr("content")
+                const header = $("meta[name='_csrf_header']").attr("content")
+                xhr.setRequestHeader(header, token)
+            },
+            success: function(data, textStatus, jqXHR) {
+                logResponse(data)
+                createCredential(data)
+            }
+        });
+    }
+    /**
+     * This functions calls out the WebAuthentication browser API to have the authenticator
+     * create a public private key pair.
+     * @param settings
+     */
+
+    function createCredential(settings) {
+
+        const publicKey = {
+            'challenge': toByteArray(settings.challenge),
+            'rp': settings.rp,
+            'user': {
+                name: settings.user.name,
+                displayName: settings.user.displayName,
+                id: toByteArray(settings.user.id)
+            },
+            'pubKeyCredParams': settings.pubKeyCredParams,
+            'attestation': 'direct'
+        }
+
+        console.log(publicKey)
+        navigator.credentials.create({ 'publicKey': publicKey })
+            .then((newCredentialInfo) => {
+                console.log('SUCCESS', newCredentialInfo)
+            })
+            .catch((error) => {
+                console.log('FAIL', error)
+            })
+    }
+
+    function logTitle(title) {
+        const h2 = $('<h2></h2>').text(title)
+        $("body").append(h2)
+    }
+
+    function logRequest(data) {
+        const response = JSON.stringify(data,null,2);
+        const p = $('<p>Request:</p>')
+        const pre = $('<pre></pre>').text(response)
+        $("body").append(p,pre)
+    }
 
 
+    function logResponse(data) {
+        const response = JSON.stringify(data,null,2);
+        const p = $('<p>Response:</p>')
+        const pre = $('<pre></pre>').text(response)
+        $("body").append(p,pre)
+    }
+
+    function toByteArray(base64String){
+        console.log(base64String)
+        return Uint8Array.from(atob(base64String), c => c.charCodeAt(0))
+    }
 
 </script>
 </body>

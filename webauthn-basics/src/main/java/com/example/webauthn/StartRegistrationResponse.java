@@ -1,6 +1,7 @@
 package com.example.webauthn;
 
-public class RegistrationRequest {
+public class StartRegistrationResponse {
+  private int id;
   private String fullName;
   private String email;
 
