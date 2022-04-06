@@ -21,7 +21,7 @@ class WebAuthnService {
   WebAuthnService(CredentialRepository credentialRepository, UserService userService) {
     this.userService = userService;
     RelyingPartyIdentity rpIdentity = RelyingPartyIdentity.builder()
-        .id("example.com")  // Set this to a parent domain that covers all subdomains// where users' credentials should be valid
+        .id("localhost")  // Set this to a parent domain that covers all subdomains// where users' credentials should be valid
         .name("Example Application")
         .build();
 

@@ -1,6 +1,6 @@
 package com.example.webauthn;
 
-import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,8 +15,8 @@ class UserController {
   }
 
   @PostMapping("/users/register/start")
-  PublicKeyCredentialCreationOptions register(@RequestBody StartRegistrationRequest request) {
+  String register(@RequestBody StartRegistrationRequest request) throws JsonProcessingException {
     var options = this.webAuthnService.startRegisteration(request);
-    return options;
+    return options.toJson();
   }
 }
