@@ -15,12 +15,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.OAuth2TokenFormat;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration(proxyBeanMethods = false)
@@ -37,7 +40,7 @@ class AuthorizationServerConfiguration {
    * The @Order anotation is used here because ??
    */
   @Bean
-  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @Order(0)
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
@@ -64,8 +67,12 @@ class AuthorizationServerConfiguration {
   }
 
   /**
+   * The authorization server has two protected endpoints /userinfo and /clientregisteration
+   * the /userinfo provides  info about the user and
    * only needed for the UserInfoEndpoint and dynamic client registeration.
    * why?
+   *
+   * not needed if this is using opaque access tokens.
    *
    * @return
    */
@@ -79,6 +86,8 @@ class AuthorizationServerConfiguration {
    * generate the /.well-known/openid-configuration object and this is why we need
    * this section?
    *
+   *
+   *  This usess all the default settings.
    * @return
    */
   @Bean
@@ -110,7 +119,7 @@ class AuthorizationServerConfiguration {
   @Bean
   public RegisteredClientRepository registeredClientRepository() {
 
-    RegisteredClient registeredClient =
+    RegisteredClient confidentialClient =
         RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("quotes")
             .clientSecret("{noop}abc123")
@@ -119,11 +128,22 @@ class AuthorizationServerConfiguration {
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
             .redirectUri("http://127.0.0.1:8080/login/oauth2/code/demoAuthServer")
             .redirectUri("http://127.0.0.1:8080/")
+         //   .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).requireProofKey(true).build()) PKCE comming spring security 5.7
             .scope(OidcScopes.OPENID)
             .scope("read")
             // .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
             .build();
 
-    return new InMemoryRegisteredClientRepository(registeredClient);
+    RegisteredClient publicClient = RegisteredClient.withId(UUID.randomUUID().toString())
+            .clientId("public-client")
+            .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
+            .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+            .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+            .redirectUri("http://127.0.0.1:4200")
+            .redirectUri("http://127.0.0.1:4200/silent-renew.html")
+            .scope(OidcScopes.OPENID)
+            .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).requireProofKey(true).build())
+            .build();
+    return new InMemoryRegisteredClientRepository(confidentialClient, publicClient);
   }
 }

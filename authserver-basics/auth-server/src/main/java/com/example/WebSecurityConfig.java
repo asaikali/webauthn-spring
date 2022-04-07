@@ -3,6 +3,7 @@ package com.example;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import org.springframework.context.annotation.*;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.*;
 import org.springframework.security.core.userdetails.User;
@@ -16,6 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfig {
 
   @Bean
+  @Order(1)
   SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
         .formLogin(withDefaults());
