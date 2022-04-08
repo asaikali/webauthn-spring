@@ -11,11 +11,34 @@ import { AuthModule } from 'angular-auth-oidc-client';
               clientId: 'public-client',
               scope: 'openid', // 'openid profile offline_access ' + your scopes
               responseType: 'code',
-              silentRenew: true,
               useRefreshToken: true,
-              renewTimeBeforeTokenExpiresInSeconds: 30,
+              silentRenew: true,
+              silentRenewUrl: window.location.origin + '/silent-renew.html',
+              renewTimeBeforeTokenExpiresInSeconds: 10,
           }
       })],
     exports: [AuthModule],
 })
 export class AuthConfigModule {}
+
+/*
+
+
+
+import { NgModule } from '@angular/core';
+import { AuthModule } from 'angular-auth-oidc-client';
+
+
+@NgModule({
+  imports: [AuthModule.forRoot({
+    config: {
+
+      autoUserInfo: false
+    }
+  })],
+  exports: [AuthModule],
+})
+export class AuthConfigModule {
+}
+
+ */

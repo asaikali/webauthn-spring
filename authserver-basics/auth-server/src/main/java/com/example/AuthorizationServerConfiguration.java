@@ -61,7 +61,12 @@ class AuthorizationServerConfiguration {
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-    return http.cors(Customizer.withDefaults()).formLogin(Customizer.withDefaults()).build();
+
+    return http.cors(Customizer.withDefaults())
+            .oauth2ResourceServer( oauth2ResourceServer -> {
+              oauth2ResourceServer.jwt();
+            })
+            .formLogin(Customizer.withDefaults()).build();
   }
 
   /**
@@ -153,13 +158,14 @@ class AuthorizationServerConfiguration {
 
     RegisteredClient publicClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .clientId("public-client")
-            .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
+            .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
             .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .redirectUri("http://127.0.0.1:4200")
+            .redirectUri("http://localhost:4200") // this does not work localhost not allowed see https://github.com/spring-projects/spring-authorization-server/issues/680
             .redirectUri("http://127.0.0.1:4200/silent-renew.html")
             .scope(OidcScopes.OPENID)
-            .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).requireProofKey(true).build())
+            .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
             .build();
     return new InMemoryRegisteredClientRepository(confidentialClient, publicClient);
   }
