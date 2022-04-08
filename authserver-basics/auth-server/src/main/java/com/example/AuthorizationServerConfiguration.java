@@ -25,9 +25,26 @@ import org.springframework.security.oauth2.server.authorization.config.ClientSet
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration(proxyBeanMethods = false)
 class AuthorizationServerConfiguration {
+
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    CorsConfiguration config = new CorsConfiguration();
+    config.addAllowedHeader("*");
+    config.addAllowedMethod("*");
+    config.addAllowedOrigin("http://localhost:4200");
+    config.addAllowedOrigin("http://127.0.0.1:4200");
+    config.setAllowCredentials(false);
+    source.registerCorsConfiguration("/**", config);
+    return source;
+  }
+
 
   /**
    * The authorization server defines a set of api endpoints that are invoked by client
@@ -44,7 +61,7 @@ class AuthorizationServerConfiguration {
   public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
       throws Exception {
     OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-    return http.formLogin(Customizer.withDefaults()).build();
+    return http.cors(Customizer.withDefaults()).formLogin(Customizer.withDefaults()).build();
   }
 
   /**
