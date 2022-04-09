@@ -13,6 +13,8 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2TokenFormat;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -168,6 +170,48 @@ class AuthorizationServerConfiguration {
         this.createConfidentialTestClient(repo);
         this.createPublicTestClient(repo);
         return repo;
+    }
+
+
+    /**
+     * <p>
+     *  Typically a client application wants to call an api on a resource server. When the resource server
+     *  gets a request it must check if the caller is allowed to perform the request application. The resource
+     *  server does this by checking that the access token has the required scope. The auth server requires
+     *  the consent of the user to generate an access token with a specific scopes in it. The auth server asks
+     *  for user consent and records the result of what the user is consenting to in its database.
+     * </p>
+     *
+     * <p>
+     * The Spring authorization server does not want to dictate what kind of database you are going to use to store
+     * the results of users granting consent for a request. Therefore, you are expected to provide an
+     * implementation of the OAuth2AuthorizationConsentService interface. Two implementations of
+     * OAuth2AuthorizationConsentService are provided out of the box: JdbcOAuth2AuthorizationConsentService,
+     * InMemoryOAuth2AuthorizationConsentService. The in memory implementation is only useful for testing,
+     * the jdbc implementation can be used in production.
+     * </p>
+     *
+     * <p>
+     * In this sample we copied the sql schemas that is expected by the OAuth2AuthorizationConsentService
+     * from the the spring auth server .jar file into src/main/resources/db/migration and have flyway
+     * creating the database tables. You can inspect what is in the database by going via the h2-console
+     * see the application.yml for details.
+     * </p>
+     *
+     * <p>
+     * Depending on your requirements you might need to provide you own implementation of the
+     * OAuth2AuthorizationConsentService to store the results in a NoSQL database or control the table structure
+     * used for a SQL database.
+     * </p>
+     *
+     * @param jdbcTemplate
+     * @param registeredClientRepository
+     * @return
+     */
+    @Bean
+    public OAuth2AuthorizationConsentService consentService(JdbcTemplate jdbcTemplate,
+                                                            RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate,registeredClientRepository);
     }
 
     /**
