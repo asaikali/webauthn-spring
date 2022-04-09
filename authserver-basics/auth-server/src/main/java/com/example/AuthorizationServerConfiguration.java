@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
@@ -22,6 +23,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenFormat;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
@@ -140,7 +142,7 @@ class AuthorizationServerConfiguration {
      * interact with a client application that wants to use the auth server.
      */
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
+    public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
 
         RegisteredClient confidentialClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
@@ -171,6 +173,10 @@ class AuthorizationServerConfiguration {
                 .scope("quotes.read")
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
                 .build();
-        return new InMemoryRegisteredClientRepository(confidentialClient, publicClient);
+        // return new InMemoryRegisteredClientRepository(confidentialClient, publicClient);
+        var repo = new JdbcRegisteredClientRepository(jdbcTemplate);
+        repo.save(publicClient);
+        repo.save(confidentialClient);
+        return repo;
     }
 }
