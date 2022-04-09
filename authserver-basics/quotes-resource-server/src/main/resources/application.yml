@@ -10,13 +10,12 @@ management:
       exposure:
         include: "*" # don't do this in production, it can be a security risk to expose too much.
 server:
-  port: 9090
-  servlet:
-    session:
-      cookie:
-        name: sessionid
+  port: 8081
 
-logging:
-  level:
-    org.springframework.security: trace
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090
 

@@ -12,6 +12,10 @@ management:
 server:
   port: 8080
 
+logging:
+  level:
+    org.springframework.security: trace
+
 spring:
   security:
     oauth2:
