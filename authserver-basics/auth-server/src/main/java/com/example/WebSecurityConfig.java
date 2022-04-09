@@ -17,28 +17,34 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-  @Bean
-  @Order(1)
-  SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-    http.authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-            .cors(Customizer.withDefaults())
-        .formLogin(withDefaults());
-    return http.build();
-  }
+    @Bean
+    @Order(1)
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeRequests(authorizeRequests -> {
 
-  @Bean
-  public UserDetailsService userDetailsService() {
-    InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-    UserBuilder users = User.withDefaultPasswordEncoder();
+                    authorizeRequests.antMatchers("/h2-console/**").permitAll()
+                            .anyRequest().authenticated();
+                })
+                .cors(Customizer.withDefaults())
+                .csrf().ignoringAntMatchers("/h2-console/**").and()
+                .headers().frameOptions().sameOrigin().and()
+                .formLogin(withDefaults());
+        return http.build();
+    }
 
-    // add a regular user
-    UserDetails user = users.username("user").password("user").roles("USER").build();
-    manager.createUser(user);
+    @Bean
+    public UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        UserBuilder users = User.withDefaultPasswordEncoder();
 
-    // add an admin user
-    UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
-    manager.createUser(admin);
+        // add a regular user
+        UserDetails user = users.username("user").password("user").roles("USER").build();
+        manager.createUser(user);
 
-    return manager;
-  }
+        // add an admin user
+        UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
+        manager.createUser(admin);
+
+        return manager;
+    }
 }
