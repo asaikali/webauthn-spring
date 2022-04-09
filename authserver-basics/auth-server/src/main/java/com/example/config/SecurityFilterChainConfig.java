@@ -116,8 +116,7 @@ public class SecurityFilterChainConfig {
         // a JWT with information about the user. The /userinfo end requires the caller to provide
         // an access token, so the auth server reuses the spring security resource server support
         // to enforce security on the /userinfo end point
-
-      //  http.oauth2ResourceServer().jwt();
+        http.oauth2ResourceServer().jwt();
 
         // allows client apps to authenticate with the auth server using http basic authentication via client-id and
         // client-secret
