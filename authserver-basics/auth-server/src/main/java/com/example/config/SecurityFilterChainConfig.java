@@ -8,9 +8,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * <p>
@@ -98,12 +100,11 @@ public class SecurityFilterChainConfig {
      * highest possible Order.
      * </p>
      *
-     * @param http bulider pojo used to configure the security filter chain
+     * @param http builder pojo used to configure the security filter chain
      */
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
-            throws Exception {
+    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
         // apply the default configuration shipped with the authorization server
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
@@ -125,23 +126,72 @@ public class SecurityFilterChainConfig {
     }
 
     /**
+     * <p>
+     * Configure the filter security chain that will be used to authenticate users. This filter chain
+     * will always run after the authorization server filter chain. In a real world scenario this
+     * filter chain is configured to perform authentication using a real world technology such as
+     * Active Directory, A custom user database, a social login provider such as google or linkedIn.
+     * </p>
+     *
+     * <p>
+     * The application hosting the auth server needs to be able to authenticate client application and
+     * users. authentication of application client is done by the authorization server security filter
+     * chain. The authentication of end users is done by this filter chain.
+     * </p>
+     *
+     * <p>
+     * We are putting the ordered annotation for consistent, even if we remove the annotation things will
+     * continue to work, but we want to explicitly call out that there is an Order that we care about.
+     * </p>
      * @param http
      * @return
      * @throws Exception
      */
     @Bean
+    @Order(Ordered.LOWEST_PRECEDENCE)
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests(authorizeRequests -> {
+        // configure cross-origin request so that angular app can make calls to the auth server
+        http.cors(Customizer.withDefaults());
 
-                    authorizeRequests.antMatchers("/h2-console/**").permitAll()
-                            .anyRequest().authenticated();
-                })
-                .cors(Customizer.withDefaults())
-                .csrf().ignoringAntMatchers("/h2-console/**").and()
-                .headers().frameOptions().sameOrigin().and()
-                .formLogin(withDefaults());
+        // for education purposes we turn on the h2-console so we need to make sure that
+        // spring security does not block requests to the h2 console.
+        //
+        // WARNING: NEVER do this in production
+        http.csrf().ignoringAntMatchers("/h2-console/**");
+        http.headers().frameOptions().sameOrigin();
+        http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
+
+        // set default request policy to required authentication.
+        http.authorizeRequests().anyRequest().authenticated();
+
+        // define a user detail service that uses some hard coded test users
+        // WARNING: NEVER do this in production
+        http.userDetailsService(this.userDetailsService());
+
+        // turn on form authentication
+        http.formLogin(Customizer.withDefaults());
+
+        // build the security filter chain and return it
         return http.build();
     }
 
+    /**
+     * create a test user details for testing purposes. don't do this in production, implement
+     * a real user detail service or AuthenticationManager.
+     */
+    private UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        User.UserBuilder users = User.withDefaultPasswordEncoder();
+
+        // add a regular user
+        UserDetails user = users.username("user").password("user").roles("USER").build();
+        manager.createUser(user);
+
+        // add an admin user
+        UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
+        manager.createUser(admin);
+
+        return manager;
+    }
 
 }
