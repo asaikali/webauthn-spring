@@ -1,6 +1,5 @@
 package com.example.config;
 
-import com.example.util.Jwks;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -21,6 +20,10 @@ import org.springframework.security.oauth2.server.authorization.config.ClientSet
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
 /**
@@ -54,7 +57,31 @@ class AuthorizationServerConfiguration {
      */
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        RSAKey rsaKey = Jwks.generateRsa();
+
+        // generate a random RSA keypair using the features of the JDK
+        // in production we would be getting the key pair from a key vault
+        // for demo purpose this is easier to do
+        KeyPair keyPair;
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            keyPair = keyPairGenerator.generateKeyPair();
+        } catch (Exception ex) {
+            throw new IllegalStateException(ex);
+        }
+
+        // we need a way to convert the JDK RSA key pair into a JSON formatted JSON Web Key (JWK)
+        // we will use the Nimbus JOSE framework to accomplish this task.
+
+        // A Nimbus RSA key from the JDK key pair
+        RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+                .privateKey((RSAPrivateKey) keyPair.getPrivate())
+                .keyID(UUID.randomUUID().toString())
+                .build();
+
+        // Add the JWK to the key set. The standards require that AuthServers return a key set rather
+        // than a single key. A key set can contain expired keys and new keys, using a key set makes
+        // key rotation practical.
         JWKSet jwkSet = new JWKSet(rsaKey);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
