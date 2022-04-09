@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import { OidcSecurityService } from 'angular-auth-oidc-client';
+import {LoginResponse, OidcSecurityService} from 'angular-auth-oidc-client';
 
 @Component({
   selector: 'app-root',
@@ -11,9 +11,10 @@ export class AppComponent implements OnInit {
   constructor(public oidcSecurityService: OidcSecurityService) {}
 
   ngOnInit() {
-    this.oidcSecurityService.checkAuth().subscribe(({ isAuthenticated, userData, accessToken }) => {
-      console.log('app authenticated', isAuthenticated);
-      console.log(`Current access token is '${accessToken}'`);
+    this.oidcSecurityService.checkAuth().subscribe(( loginResponse: LoginResponse) => {
+      console.log('app authenticated', loginResponse.isAuthenticated);
+      console.log(`Current access token is '${loginResponse.accessToken}'`);
+      console.log(`Current id token is '${loginResponse.idToken}'`);
     });
   }
 }

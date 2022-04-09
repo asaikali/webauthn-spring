@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { OidcClientNotification, OidcSecurityService, OpenIdConfiguration, UserDataResult } from 'angular-auth-oidc-client';
+import { OidcSecurityService, OpenIdConfiguration, UserDataResult } from 'angular-auth-oidc-client';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -28,23 +28,22 @@ export class HomeComponent implements OnInit {
     this.oidcSecurityService.authorize();
   }
 
-  refreshSession() {
-    this.oidcSecurityService.forceRefreshSession().subscribe((result) => console.log(result));
-  }
-
   logout() {
     this.oidcSecurityService.logoff();
   }
 
   logoffAndRevokeTokens() {
-    this.oidcSecurityService.logoffAndRevokeTokens().subscribe((result) => console.log(result));
+    this.oidcSecurityService.logoffAndRevokeTokens().subscribe(
+      (result) => {
+        console.log(result)
+      }
+    );
   }
 
-  revokeRefreshToken() {
-    this.oidcSecurityService.revokeRefreshToken().subscribe((result) => console.log(result));
-  }
 
   revokeAccessToken() {
-    this.oidcSecurityService.revokeAccessToken().subscribe((result) => console.log(result));
+    this.oidcSecurityService.revokeAccessToken().subscribe((result) => {
+      console.log(result)
+    });
   }
 }

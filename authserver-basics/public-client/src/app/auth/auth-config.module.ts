@@ -11,7 +11,7 @@ import { AuthModule } from 'angular-auth-oidc-client';
               clientId: 'public-client',
               scope: 'openid quotes.read', // 'openid profile offline_access ' + your scopes
               responseType: 'code',
-              useRefreshToken: true,
+              useRefreshToken: false, // not currently supported by spring auth server
               silentRenew: true,
               silentRenewUrl: window.location.origin + '/silent-renew.html',
               renewTimeBeforeTokenExpiresInSeconds: 10,
