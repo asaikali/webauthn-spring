@@ -14,7 +14,9 @@ import org.springframework.security.oauth2.core.OAuth2TokenFormat;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -172,6 +174,42 @@ class AuthorizationServerConfiguration {
         return repo;
     }
 
+    /**
+     * <p>
+     * The spring authorization server needs a place to track of which clients have been issued access, refresh,
+     * and id tokens. When various tokens expire and various other attributes required to implement the
+     * oAuth2 and OIDC protocols. Spring authorization server tracks all the attributes in java object
+     * org.springframework.security.oauth2.server.authorization.OAuth2Authorization this object needs to stored
+     * in persistent store.
+     * </p>
+     *
+     * <p>
+     * The Spring Authorization Server does not want to dictate what kind of database to use to store the
+     * authorization details, so it expect a bean of type OAuth2AuthorizationService to be available. There are
+     * two out of the box implementations of OAuth2AuthorizationService: JdbcOAuth2AuthorizationService, and
+     * InMemoryOAuth2AuthorizationService. The in memory implementation is only useful for tests. The jdbc
+     * implementation can be used for production.
+     * <p/>
+     *
+     * <p>
+     * In this sample we copied the sql schemas that is expected by the OAuth2AuthorizationService
+     * from the the spring auth server .jar file into src/main/resources/db/migration and have flyway
+     * creating the database tables. You can inspect what is in the database by going via the h2-console
+     * see the application.yml for details.
+     * </p>
+     *
+     * <p>
+     * Depending on your requirements you might need to provide you own implementation of the
+     * OAuth2AuthorizationService to store the results in a NoSQL database or control the table structure
+     * used for a SQL database.
+     * </p>
+     *
+     */
+    @Bean
+    public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate,
+                                                           RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationService(jdbcTemplate,registeredClientRepository);
+    }
 
     /**
      * <p>
@@ -203,16 +241,13 @@ class AuthorizationServerConfiguration {
      * OAuth2AuthorizationConsentService to store the results in a NoSQL database or control the table structure
      * used for a SQL database.
      * </p>
-     *
-     * @param jdbcTemplate
-     * @param registeredClientRepository
-     * @return
      */
     @Bean
     public OAuth2AuthorizationConsentService consentService(JdbcTemplate jdbcTemplate,
                                                             RegisteredClientRepository registeredClientRepository) {
         return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate,registeredClientRepository);
     }
+
 
     /**
      * <p>
