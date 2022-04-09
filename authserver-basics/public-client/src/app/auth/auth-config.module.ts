@@ -9,7 +9,7 @@ import { AuthModule } from 'angular-auth-oidc-client';
               redirectUrl: window.location.origin,
               postLogoutRedirectUri: window.location.origin,
               clientId: 'public-client',
-              scope: 'openid', // 'openid profile offline_access ' + your scopes
+              scope: 'openid quotes.read', // 'openid profile offline_access ' + your scopes
               responseType: 'code',
               useRefreshToken: true,
               silentRenew: true,

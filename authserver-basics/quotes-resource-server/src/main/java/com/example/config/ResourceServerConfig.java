@@ -30,34 +30,29 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class ResourceServerConfig {
 
-	// @formatter:off
-	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http
-			.mvcMatcher("/messages/**")
-				.authorizeRequests()
-					.mvcMatchers("/messages/**").access("hasAuthority('SCOPE_quote.read')")
-					.and()
-			.cors()
-				.and()
-			.oauth2ResourceServer()
-				.jwt();
-		return http.build();
-	}
-	// @formatter:on
 
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .mvcMatchers("/random-quote").access("hasAuthority('SCOPE_quotes.read')")
+                .and()
+                .cors()
+                .and()
+                .oauth2ResourceServer()
+                .jwt();
+        return http.build();
+    }
 
-
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		CorsConfiguration config = new CorsConfiguration();
-		config.addAllowedHeader("*");
-		config.addAllowedMethod("*");
-		config.addAllowedOrigin("http://127.0.0.1:4200");
-		config.setAllowCredentials(true);
-		source.registerCorsConfiguration("/**", config);
-		return source;
-	}
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*");
+        config.addAllowedOrigin("http://127.0.0.1:4200");
+        config.setAllowCredentials(true);
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
 }
