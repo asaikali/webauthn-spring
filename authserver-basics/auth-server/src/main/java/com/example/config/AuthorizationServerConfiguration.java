@@ -254,7 +254,7 @@ class AuthorizationServerConfiguration {
                 .redirectUri("http://127.0.0.1:4200/silent-renew.html")
                 .scope(OidcScopes.OPENID)
                 .scope("quotes.read")
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).requireProofKey(true).build())
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).requireProofKey(true).build())
                 .build();
 
         registeredClientRepository.save(publicClient);

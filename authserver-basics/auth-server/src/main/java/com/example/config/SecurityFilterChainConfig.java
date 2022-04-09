@@ -15,6 +15,9 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
+ *
+ * <p>Start by reading the Javadoc on the SecurityFilterChainConfig class if you have not read it already</p>
+ *
  * <p>
  * Spring Security protects web endpoints by sending a request through a security filter chain. Each filter
  * in the filter chain inspects the HTTP request and applies a policy to decide if the request
