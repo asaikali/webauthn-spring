@@ -9,6 +9,6 @@ class RootController {
 
   @GetMapping("/")
   String get() {
-    return "This is the basic-auth-server where the current time is: " + LocalDateTime.now();
+    return "If you see this message you are logged into the auth-server, the current time is: " + LocalDateTime.now();
   }
 }
