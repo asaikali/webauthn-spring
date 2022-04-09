@@ -51,28 +51,6 @@ class AuthorizationServerConfiguration {
     }
 
 
-    /**
-     * The authorization server defines a set of api endpoints that are invoked by client
-     * applications following the rules of the OpenID Connect and OAuth2 protocols. The auth
-     * server endpoints have their own security rules that must be enforced. Enforcement is done
-     * by creating a SecurityFilterChain and configuring it correctly.  To make things easy
-     * the Spring Auth server provides a helper method to apply the default configuration
-     * for security to the end points.
-     * <p>
-     * The @Order anotation is used here because ??
-     */
-    @Bean
-    @Order(0)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
-            throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-
-        return http.cors(Customizer.withDefaults())
-                .oauth2ResourceServer(oauth2ResourceServer -> {
-                    oauth2ResourceServer.jwt();
-                })
-                .formLogin(Customizer.withDefaults()).build();
-    }
 
     /**
      * The authorization server produces JWT tokens that are digitally signed. So the

@@ -17,20 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-    @Bean
-    @Order(1)
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeRequests(authorizeRequests -> {
 
-                    authorizeRequests.antMatchers("/h2-console/**").permitAll()
-                            .anyRequest().authenticated();
-                })
-                .cors(Customizer.withDefaults())
-                .csrf().ignoringAntMatchers("/h2-console/**").and()
-                .headers().frameOptions().sameOrigin().and()
-                .formLogin(withDefaults());
-        return http.build();
-    }
 
     @Bean
     public UserDetailsService userDetailsService() {
