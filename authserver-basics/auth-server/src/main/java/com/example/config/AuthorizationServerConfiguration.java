@@ -340,7 +340,17 @@ class AuthorizationServerConfiguration {
         registeredClientRepository.save(publicClient);
     }
 
-
+    /**
+     * <p>
+     * When one service wants to call a resource server and it is making the call on it's behalf, without any
+     * involvement of a user, the service can use the client credentials flow to get a token that it can use to
+     * call the resource server.
+     * </p>
+     *
+     * <p>
+     * This method registers a client that is allowed to only use the client credentials
+     * </p>
+     */
     private void clientCredentialsTestClient(RegisteredClientRepository registeredClientRepository){
         RegisteredClient clientCredentialsClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
