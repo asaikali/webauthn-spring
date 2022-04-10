@@ -12,16 +12,23 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class ResourceServerConfig {
 
-
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        // configure the required scope for the /random-quote url
         http.authorizeRequests()
                 .mvcMatchers("/random-quote").access("hasAuthority('SCOPE_quotes.read')")
-                .and()
-                .cors()
-                .and()
-                .oauth2ResourceServer()
-                .jwt();
+                .anyRequest().authenticated();
+
+        // step cross-origin requests so that the angular public client can call this service
+        http.cors();
+
+        // configure the resource servec to expect access tokens that are JWTs
+        // JWT can be validated locally without having to make a call to the
+        // authorization server.
+        http.oauth2ResourceServer().jwt();
+
+        // return the configured security filter chain
         return http.build();
     }
 
