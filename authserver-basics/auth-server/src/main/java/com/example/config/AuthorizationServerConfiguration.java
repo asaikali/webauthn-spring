@@ -172,6 +172,7 @@ class AuthorizationServerConfiguration {
         this.createConfidentialTestClient(repo);
         this.createPublicTestClient(repo);
         this.clientCredentialsTestClient(repo);
+        this.opaqueClients(repo);
         return repo;
     }
 
@@ -356,6 +357,7 @@ class AuthorizationServerConfiguration {
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("uppercase-quotes")
                         .clientSecret("{noop}abc123")
+                        .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .scope(OidcScopes.OPENID)
@@ -363,5 +365,37 @@ class AuthorizationServerConfiguration {
                         .build();
 
         registeredClientRepository.save(clientCredentialsClient);
+    }
+
+    /**
+     * <p>
+     *  Spring Authorization supports giving client apps opqaue tokens and allowing resource servers to validate
+     *  opaque tokens using the token introspection endpoints. This method requires a client and resource server
+     *  that use opaque token.
+     * </p>
+     */
+    private void opaqueClients(RegisteredClientRepository registeredClientRepository){
+        RegisteredClient resourceServer =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("quotes-resource-server-opaque")
+                        .clientSecret("{noop}abc123")
+                        .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .build();
+
+        RegisteredClient client =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("uppercase-quotes-opaque")
+                        .clientSecret("{noop}abc123")
+                        .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .scope(OidcScopes.OPENID)
+                        .scope("quotes.read")
+                        .build();
+
+        registeredClientRepository.save(client);
+        registeredClientRepository.save(resourceServer);
     }
 }

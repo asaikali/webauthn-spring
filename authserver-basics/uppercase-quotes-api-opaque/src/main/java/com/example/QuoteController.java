@@ -21,10 +21,9 @@ public class QuoteController {
   public Quote randomQuote(@RegisteredOAuth2AuthorizedClient("demoAuthServer") OAuth2AuthorizedClient client) {
 
     System.out.println("using token value: " + client.getAccessToken().getTokenValue());
-
     Quote quote = webClient
             .get()
-            .uri("http://127.0.0.1:8081/random-quote")
+            .uri("http://127.0.0.1:8083/random-quote")
             .attributes(oauth2AuthorizedClient(client))
             .retrieve()
             .bodyToMono(Quote.class)

@@ -1,0 +1,39 @@
+
+management:
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*" # don't do this in production, it can be a security risk to expose too much.
+server:
+  port: 8084
+
+logging:
+  level:
+    org.springframework.security: info
+    reactor.netty.http.client: debug
+
+
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          demoAuthServer:
+            provider: spring
+            client-id: "uppercase-quotes-opaque"
+            client-secret: "abc123"
+            authorization-grant-type: client_credentials
+            scope: "openid,quotes.read"
+        provider:
+          spring:
+            authorization-uri: http://localhost:9090/oauth2/authorize
+            token-uri: http://localhost:9090/oauth2/token
+            user-info-uri: http://localhost:9090/userinfo
+            jwk-set-uri: http://localhost:9090/oauth2/jwks
+

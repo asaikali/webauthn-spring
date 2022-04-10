@@ -1,0 +1,25 @@
+
+management:
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*" # don't do this in production, it can be a security risk to expose too much.
+server:
+  port: 8083
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          client-id: "quotes-resource-server-opaque"
+          client-secret: "abc123"
+          introspection-uri: http://localhost:9090/oauth2/introspect
+logging:
+  level:
+   reactor.netty.http.client: trace
