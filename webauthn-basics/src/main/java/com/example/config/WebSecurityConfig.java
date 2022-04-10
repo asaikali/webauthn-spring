@@ -15,44 +15,53 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * This class uses the Lambda style DSL see the following blog posts for more info
- *
+ * <p>
  * https://spring.io/blog/2019/11/21/spring-security-lambda-dsl
  * https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
- *
  */
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-  @Bean
-  SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-    http.authorizeRequests(authorizeRequests ->
-            authorizeRequests
-                .mvcMatchers("/", "/register", "/users/register/start", "favicon.ico").permitAll()
-                .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                .anyRequest().authenticated());
+    @Bean
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
-    http.formLogin(formLogin ->
-        formLogin
-            .loginPage("/login")
-            .permitAll()
-    );
+        // for education purposes we turn on the h2-console so we need to make sure that
+        // spring security does not block requests to the h2 console.
+        //
+        // WARNING: NEVER do this in production
+        http.csrf().ignoringAntMatchers("/h2-console/**");
+        http.headers().frameOptions().sameOrigin();
+        http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
 
-    return http.build();
-  }
 
-  @Bean
-  public UserDetailsService userDetailsService() {
-    InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-    UserBuilder users = User.withDefaultPasswordEncoder();
+        http.authorizeRequests(authorizeRequests ->
+                authorizeRequests
+                        .mvcMatchers("/", "/register", "/users/register/start", "favicon.ico").permitAll()
+                        .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                        .anyRequest().authenticated());
 
-    // add a regular user
-    UserDetails user = users.username("user").password("user").roles("USER").build();
-    manager.createUser(user);
+        http.formLogin(formLogin ->
+                formLogin
+                        .loginPage("/login")
+                        .permitAll()
+        );
 
-    // add an admin user
-    UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
-    manager.createUser(admin);
+        return http.build();
+    }
 
-    return manager;
-  }
+    @Bean
+    public UserDetailsService userDetailsService() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+        UserBuilder users = User.withDefaultPasswordEncoder();
+
+        // add a regular user
+        UserDetails user = users.username("user").password("user").roles("USER").build();
+        manager.createUser(user);
+
+        // add an admin user
+        UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
+        manager.createUser(admin);
+
+        return manager;
+    }
 }

@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:db
+    username: sa
+    password: ""
+    driverClassName: org.h2.Driver
+  jpa:
+    spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: "/h2-console"
+
+management:
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*" # don't do this in production, it is too risky, se we can write less instructions for the lab
+
+logging:
+  level:
+    org.springframework.security: info
+
