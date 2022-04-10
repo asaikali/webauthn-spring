@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Create a new Account</title>
+  <script src="js/base64/base64.js"></script>
   <script src="/js/jquery/jquery-3.6.0.min.js"></script>
 
   <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
@@ -85,6 +86,10 @@
 
     function createCredential(settings) {
 
+
+
+
+        logTitle("Step 1: Use options from server to create credential in authenticator")
         const publicKey = {
             'challenge': toByteArray(settings.challenge),
             'rp': settings.rp,
@@ -100,7 +105,21 @@
         console.log(publicKey)
         navigator.credentials.create({ 'publicKey': publicKey })
             .then((newCredentialInfo) => {
-                console.log('SUCCESS', newCredentialInfo)
+               console.log('SUCCESS', newCredentialInfo)
+
+              const finishRequest = {
+                 id: newCredentialInfo.id,
+                 rawId: fromByteArray(newCredentialInfo.rawId),
+                 type: newCredentialInfo.type,
+                 response: {
+                   clientDataJSON: fromByteArray(newCredentialInfo.response.clientDataJSON),
+                   attestationObject: fromByteArray(newCredentialInfo.response.attestationObject)
+                 },
+                clientExtensionResults: {}
+              }
+
+              console.log(finishRequest)
+              logRequest(finishRequest)
             })
             .catch((error) => {
                 console.log('FAIL', error)
@@ -127,26 +146,7 @@
         $("body").append(p,pre)
     }
 
-    function toByteArray(base64String){
-        console.log(base64String)
 
-
-        // Replace non-url compatible chars with base64 standard chars
-        let input = base64String
-            .replace(/-/g, '+')
-            .replace(/_/g, '/');
-
-        // Pad out with standard base64 required padding characters
-        const pad = input.length % 4;
-        if(pad) {
-            if(pad === 1) {
-                throw new Error('InvalidLengthError: Input base64url string is the wrong length to determine padding');
-            }
-            input += new Array(5-pad).join('=');
-        }
-        console.log(window.atob(input))
-       return  Uint8Array.from(window.atob(input), c=>c.charCodeAt(0))
-    }
 
 </script>
 </body>

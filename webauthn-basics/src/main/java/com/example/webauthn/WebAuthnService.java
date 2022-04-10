@@ -3,13 +3,11 @@ package com.example.webauthn;
 import com.example.user.UserAccount;
 import com.example.user.UserService;
 import com.yubico.webauthn.CredentialRepository;
+import com.yubico.webauthn.FinishRegistrationOptions;
 import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartRegistrationOptions;
-import com.yubico.webauthn.data.AuthenticatorSelectionCriteria;
-import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
-import com.yubico.webauthn.data.RelyingPartyIdentity;
-import com.yubico.webauthn.data.UserIdentity;
-import com.yubico.webauthn.data.UserVerificationRequirement;
+import com.yubico.webauthn.data.*;
+import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +29,7 @@ class WebAuthnService {
         .build();
   }
 
-  PublicKeyCredentialCreationOptions startRegisteration(StartRegistrationRequest request) {
+  PublicKeyCredentialCreationOptions startRegistration(StartRegistrationRequest request) {
 
     UserAccount user = this.userService.createOrFindUser(request.fullName(), request.email());
 
@@ -50,4 +48,9 @@ class WebAuthnService {
   }
 
 
+  void finishRegistration(PublicKeyCredentialCreationOptions request,
+                           PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> response) throws RegistrationFailedException {
+    FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(request).response(response).build();
+    this.relyingParty.finishRegistration(options);
+  }
 }
