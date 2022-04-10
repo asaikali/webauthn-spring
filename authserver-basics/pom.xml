@@ -24,6 +24,7 @@
     <module>auth-server</module>
     <module>confidential-client</module>
     <module>quotes-resource-server</module>
+    <module>uppercase-quotes-api</module>
   </modules>
 
   <dependencies>

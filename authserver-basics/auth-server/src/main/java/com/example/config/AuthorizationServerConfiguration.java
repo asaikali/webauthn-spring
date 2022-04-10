@@ -171,6 +171,7 @@ class AuthorizationServerConfiguration {
         var repo =  new JdbcRegisteredClientRepository(jdbcTemplate);
         this.createConfidentialTestClient(repo);
         this.createPublicTestClient(repo);
+        this.clientCredentialsTestClient(repo);
         return repo;
     }
 
@@ -337,5 +338,20 @@ class AuthorizationServerConfiguration {
                 .build();
 
         registeredClientRepository.save(publicClient);
+    }
+
+
+    private void clientCredentialsTestClient(RegisteredClientRepository registeredClientRepository){
+        RegisteredClient clientCredentialsClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("uppercase-quotes")
+                        .clientSecret("{noop}abc123")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .scope(OidcScopes.OPENID)
+                        .scope("quotes.read")
+                        .build();
+
+        registeredClientRepository.save(clientCredentialsClient);
     }
 }
