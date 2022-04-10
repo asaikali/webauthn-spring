@@ -2,8 +2,7 @@
 
 <div *ngIf="isAuthenticated; else noAuth">
   <button (click)="logout()">Logout</button>
-  <button (click)="logoffAndRevokeTokens()">Logout and revoke tokens</button>
-  <button (click)="revokeAccessToken()">Revoke access token</button>
+  <button (click)="dynamicClientReg()">DynamicClientReg</button>
   <hr />
 
   <br />
