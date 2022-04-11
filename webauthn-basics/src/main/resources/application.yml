@@ -1,11 +1,14 @@
 server:
-  port: 8080
+  port: 8443
   ssl:
     enabled: true
     key-store-type: PKCS12
     key-store: keystore.p12
     key-password: changeit
     key-alias: demo
+
+http:
+  port: 8080
 
 spring:
   datasource:

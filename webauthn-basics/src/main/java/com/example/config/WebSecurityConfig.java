@@ -2,7 +2,11 @@ package com.example.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import org.apache.catalina.connector.Connector;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -33,10 +37,17 @@ public class WebSecurityConfig {
         http.headers().frameOptions().sameOrigin();
         http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
 
+        http.requiresChannel().anyRequest().requiresSecure();
 
         http.authorizeRequests(authorizeRequests ->
                 authorizeRequests
-                        .mvcMatchers("/", "/register", "/users/register/start",  "/users/register/finish", "favicon.ico").permitAll()
+                        .mvcMatchers("/",
+                                "/register",
+                                "/users/login/start",
+                                "/users/login/finish",
+                                "/users/register/start",
+                                "/users/register/finish",
+                                "favicon.ico").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .anyRequest().authenticated());
 
@@ -64,4 +75,6 @@ public class WebSecurityConfig {
 
         return manager;
     }
+
+
 }

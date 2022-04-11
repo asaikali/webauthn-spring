@@ -41,27 +41,7 @@ class RegistrationService {
         return startResponse;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
-    public RegistrationFinishResponse finishRegistration(RegistrationFinishRequest finishRequest, PublicKeyCredentialCreationOptions credentialCreationOptions) throws RegistrationFailedException, JsonProcessingException {
-
-        RegistrationFlowEntity registrationFlow = this.registrationFlowRepository.findById(finishRequest.getFlowId()).orElseThrow( ()
-        -> new RuntimeException("Cloud not find a registration flow with id: " + finishRequest.getFlowId()));
-
-        //PublicKeyCredentialCreationOptions creationOptions = PublicKeyCredentialCreationOptions.fromJson(registrationFlow.getCreationOptions());
-
-        FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(credentialCreationOptions).response(finishRequest.getCredential()).build();
-        RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
-
-
-        RegistrationFinishResponse registrationFinishResponse = new RegistrationFinishResponse();
-        registrationFinishResponse.setFlowId(finishRequest.getFlowId());
-        registrationFinishResponse.setRegistrationComplete(true);
-
-        registrationFlow.setFinishRequest(JsonUtils.toJson(finishRequest));
-        registrationFlow.setFinishResponse(JsonUtils.toJson(registrationFinishResponse));
-        registrationFlow.setRegistrationResult(JsonUtils.toJson(registrationResult));
-        return registrationFinishResponse;
-    }
+  
 
     private void logWorkflow(RegistrationStartRequest startRequest, RegistrationStartResponse startResponse) throws JsonProcessingException {
         var registrationEntity = new RegistrationFlowEntity();
@@ -92,6 +72,32 @@ class RegistrationService {
         PublicKeyCredentialCreationOptions options = this.relyingParty.startRegistration(startRegistrationOptions);
 
         return options;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public RegistrationFinishResponse finishRegistration(RegistrationFinishRequest finishRequest, PublicKeyCredentialCreationOptions credentialCreationOptions) throws RegistrationFailedException, JsonProcessingException {
+
+        
+        FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(credentialCreationOptions).response(finishRequest.getCredential()).build();
+        RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
+
+        PublicKeyCredentialDescriptor keyId = registrationResult.getKeyId();
+
+
+        RegistrationFinishResponse registrationFinishResponse = new RegistrationFinishResponse();
+        registrationFinishResponse.setFlowId(finishRequest.getFlowId());
+        registrationFinishResponse.setRegistrationComplete(true);
+
+        logFinishStep(finishRequest, registrationResult, registrationFinishResponse);
+        return registrationFinishResponse;
+    }
+
+    private void logFinishStep(RegistrationFinishRequest finishRequest, RegistrationResult registrationResult, RegistrationFinishResponse registrationFinishResponse) {
+        RegistrationFlowEntity registrationFlow = this.registrationFlowRepository.findById(finishRequest.getFlowId()).orElseThrow( ()
+                -> new RuntimeException("Cloud not find a registration flow with id: " + finishRequest.getFlowId()));
+        registrationFlow.setFinishRequest(JsonUtils.toJson(finishRequest));
+        registrationFlow.setFinishResponse(JsonUtils.toJson(registrationFinishResponse));
+        registrationFlow.setRegistrationResult(JsonUtils.toJson(registrationResult));
     }
 
 }

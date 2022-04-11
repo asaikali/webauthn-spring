@@ -2,6 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
 <head>
   <title>Log In</title>
+
+  <script src="js/base64/base64.js"></script>
+  <script src="/js/jquery/jquery-3.6.0.min.js"></script>
+
+  <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
+  <meta th:name="_csrf" th:content="${_csrf.token}"/>
+  <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
 <h1>Lets log in without a password</h1>
