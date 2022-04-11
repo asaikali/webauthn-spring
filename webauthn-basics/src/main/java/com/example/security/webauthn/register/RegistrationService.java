@@ -42,8 +42,6 @@ class RegistrationService {
         return startResponse;
     }
 
-  
-
     private void logWorkflow(RegistrationStartRequest startRequest, RegistrationStartResponse startResponse) throws JsonProcessingException {
         var registrationEntity = new RegistrationFlowEntity();
         registrationEntity.setId(startResponse.getFlowId());
