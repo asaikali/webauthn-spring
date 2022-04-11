@@ -60,7 +60,7 @@ class RegistrationService {
 
     private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(UserAccount user) {
         var userIdentity = UserIdentity.builder().
-                name(user.name()).displayName(user.name()).id(YubicoUtils.toByteArray(user.id())).build();
+                name(user.email()).displayName(user.name()).id(YubicoUtils.toByteArray(user.id())).build();
 
         var authenticatorSelectionCriteria = AuthenticatorSelectionCriteria.builder()
                 .userVerification(UserVerificationRequirement.DISCOURAGED).build();

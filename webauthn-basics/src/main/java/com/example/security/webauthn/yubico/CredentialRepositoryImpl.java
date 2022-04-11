@@ -1,16 +1,15 @@
 package com.example.security.webauthn.yubico;
 
-import com.example.security.user.UserAccount;
+import com.example.security.user.FidoCredential;
 import com.example.security.user.UserService;
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.yubico.webauthn.data.PublicKeyCredentialType;
 import com.yubico.webauthn.data.exception.Base64UrlException;
@@ -25,57 +24,81 @@ public class CredentialRepositoryImpl  implements CredentialRepository {
     this.userService = userService;
   }
 
+
   @Override
   public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {
-    List<UserAccount> users = this.userService.findAllUsersWithName(username);
-    Set<PublicKeyCredentialDescriptor> result = new HashSet<>();
 
-    users.stream().forEach( user -> {
-      user.credentials().stream().forEach( cred -> {
-        PublicKeyCredentialDescriptor descriptor = null;
-        try {
-          descriptor = PublicKeyCredentialDescriptor.builder()
-                  .id(ByteArray.fromBase64Url(cred.keyId()))
-                  .type(PublicKeyCredentialType.valueOf(cred.keyType()))
-                  .build();
-        } catch (Base64UrlException e) {
-          throw  new RuntimeException(e);
-        }
-        result.add(descriptor);
-      });
-    });
+    // in our implementation the usernames are email addresses
 
-    return result;
+    return this.userService.findUserEmail(username).map( user ->
+                    user.credentials().stream()
+                            .map(CredentialRepositoryImpl::toPublicKeyCredentialDescriptor)
+                            .collect(Collectors.toSet())
+            ).orElse(Set.of());
   }
 
   @Override
   public Optional<ByteArray> getUserHandleForUsername(String username) {
-    return Optional.empty();
+   return this.userService.findUserEmail(username).map( user -> YubicoUtils.toByteArray(user.id()));
   }
 
   @Override
   public Optional<String> getUsernameForUserHandle(ByteArray userHandle) {
-    return this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map( userAccount -> userAccount.name());
+    if(userHandle.isEmpty()) {
+      return Optional.empty();
+    }
+    return this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map( userAccount -> userAccount.email());
   }
 
   @Override
   public Optional<RegisteredCredential> lookup(ByteArray credentialId, ByteArray userHandle) {
-    return Optional.empty();
+    // user can have muliple credentials so we are looking first for the user,
+    // then for a credential that matches;
+
+    return  this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map(
+       user -> user.credentials()).orElse(Set.of()).stream()
+               .filter(  cred -> {
+                 try {
+                   return credentialId.equals(ByteArray.fromBase64Url(cred.keyId()));
+                 } catch (Base64UrlException e) {
+                   throw  new RuntimeException(e);
+                 }
+               })
+               .findFirst()
+               .map(CredentialRepositoryImpl::toRegisteredCredential);
   }
 
   @Override
   public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
-    return this.userService.findCredentialById(credentialId.getBase64Url()).map( fidoCredential -> {
-      try {
-        var descriptor = RegisteredCredential.builder()
-                .credentialId(credentialId)
-                .userHandle(YubicoUtils.toByteArray(fidoCredential.userid()))
-                .publicKeyCose(ByteArray.fromBase64Url(fidoCredential.publicKeyCose()))
-                .build();
-        return Set.of(descriptor);
-      } catch (Base64UrlException e) {
-        throw new RuntimeException(e);
-      }
-    }).orElse(Set.of());
+    return this.userService.findCredentialById(credentialId.getBase64Url())
+            .map( CredentialRepositoryImpl::toRegisteredCredential)
+            .map( r -> Set.of(r))
+            .orElse(Set.of());
+  }
+
+
+  private static RegisteredCredential toRegisteredCredential(FidoCredential fidoCredential)  {
+    try {
+      return RegisteredCredential.builder()
+              .credentialId(ByteArray.fromBase64Url(fidoCredential.keyId()))
+              .userHandle(YubicoUtils.toByteArray(fidoCredential.userid()))
+              .publicKeyCose(ByteArray.fromBase64Url(fidoCredential.publicKeyCose()))
+              .build();
+    } catch (Base64UrlException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static PublicKeyCredentialDescriptor toPublicKeyCredentialDescriptor(FidoCredential cred) {
+    PublicKeyCredentialDescriptor descriptor = null;
+    try {
+      return PublicKeyCredentialDescriptor.builder()
+              .id(ByteArray.fromBase64Url(cred.keyId()))
+              .type(PublicKeyCredentialType.valueOf(cred.keyType()))
+              .build();
+
+    } catch (Base64UrlException e) {
+      throw  new RuntimeException(e);
+    }
   }
 }
