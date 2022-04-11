@@ -12,16 +12,156 @@
 </head>
 <body>
 <h1>Lets log in without a password</h1>
-<form th:action="@{/login}" method="post">
+<form id="loginForm">
   <div>
-    <input type="text" name="username" placeholder="Username"/>
+    <input id="email" type="email" name="email" placeholder="email"/>
   </div>
-  <div>
-    <input type="password" name="password" placeholder="Password"/>
-  </div>
-  <input type="submit" value="Log in" />
+  <button type="submit">
+    Login
+  </button>
 </form>
+<script>
 
+
+  $(document).ready(function () {
+    $("#loginForm").submit(function (event) {
+      const formData = {
+        email: $("#email").val()
+      };
+      startLogin(formData);
+      event.preventDefault();
+    });
+  });
+
+
+  function startLogin(formData) {
+    logTitle("Step 0: Start the login process with the server")
+    logRequest(formData)
+    $.ajax({
+      type: "POST",
+      url: "/users/login/start",
+      data: JSON.stringify(formData),
+      dataType: "json",
+      contentType: "application/json",
+      beforeSend: function (xhr) {
+        // spring security has CSRF protection turned on, if we don't
+        // set the correct CSRF header and value spring security will
+        // block the request from getting to the Spring MVC controller
+        // that will process this request.
+        const token = $("meta[name='_csrf']").attr("content")
+        const header = $("meta[name='_csrf_header']").attr("content")
+        xhr.setRequestHeader(header, token)
+      },
+      success: function (data, textStatus, jqXHR) {
+        logResponse(data)
+        createCredential(data)
+      }
+    });
+  }
+
+  /**
+   * This functions calls out the WebAuthentication browser API to have the authenticator
+   * create a public private key pair.
+   * @param settings
+   */
+
+  function createCredential(settings) {
+    logTitle("Step 1: Use options from server to create credential in authenticator")
+    const publicKey = {
+      challenge: toByteArray(settings.credentialCreationOptions.challenge),
+      rp: {
+        name: settings.credentialCreationOptions.rp.name,
+        id: settings.credentialCreationOptions.rp.id,
+      },
+      user: {
+        name: settings.credentialCreationOptions.user.name,
+        displayName: settings.credentialCreationOptions.user.displayName,
+        id: toByteArray(settings.credentialCreationOptions.user.id)
+      },
+      pubKeyCredParams: settings.credentialCreationOptions.pubKeyCredParams,
+      attestation: settings.credentialCreationOptions.attestation
+    }
+    console.log(publicKey)
+    navigator.credentials.create({'publicKey': publicKey})
+            .then((newCredentialInfo) => {
+              console.log('SUCCESS', newCredentialInfo)
+              finishRegistration(settings,newCredentialInfo)
+            })
+            .catch((error) => {
+              console.log('FAIL', error)
+            })
+  }
+
+  function finishRegistration(settings, newCredentialInfo) {
+    const finishRequest = {
+      flowId: settings.flowId,
+      credential: {
+        id: newCredentialInfo.id,
+        rawId: fromByteArray(newCredentialInfo.rawId),
+        type: newCredentialInfo.type,
+        response: {
+          clientDataJSON: fromByteArray(newCredentialInfo.response.clientDataJSON),
+          attestationObject: fromByteArray(newCredentialInfo.response.attestationObject)
+        },
+        clientExtensionResults: {}
+      }
+    }
+
+    console.log(finishRequest)
+    logRequest(finishRequest)
+
+    $.ajax({
+      type: "POST",
+      url: "/users/register/finish",
+      data: JSON.stringify(finishRequest),
+      dataType: "json",
+      contentType: "application/json",
+      beforeSend: function (xhr) {
+        // spring security has CSRF protection turned on, if we don't
+        // set the correct CSRF header and value spring security will
+        // block the request from getting to the Spring MVC controller
+        // that will process this request.
+        const token = $("meta[name='_csrf']").attr("content")
+        const header = $("meta[name='_csrf_header']").attr("content")
+        xhr.setRequestHeader(header, token)
+      },
+      success: function (data, textStatus, jqXHR) {
+        logResponse(data)
+        createCredential(data)
+      }
+    });
+  }
+
+  function logTitle(title) {
+    const h2 = $('<h2></h2>').text(title)
+    $("body").append(h2)
+  }
+
+  function logJson(title, data) {
+    const response = JSON.stringify(data, null, 2);
+    const p = $('<p>' + title + '</p>')
+    const pre = $('<pre></pre>').text(response)
+    $("body").append(p, pre)
+  }
+
+
+  function logRequest(data) {
+    const response = JSON.stringify(data, null, 2);
+    const p = $('<p>Request:</p>')
+    const pre = $('<pre></pre>').text(response)
+    $("body").append(p, pre)
+  }
+
+
+  function logResponse(data) {
+    const response = JSON.stringify(data, null, 2);
+    const p = $('<p>Response:</p>')
+    const pre = $('<pre></pre>').text(response)
+    $("body").append(p, pre)
+  }
+
+
+</script>
 </body>
 </html>
 

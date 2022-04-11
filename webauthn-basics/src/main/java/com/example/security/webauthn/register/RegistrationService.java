@@ -1,6 +1,7 @@
 package com.example.security.webauthn.register;
 
 import com.example.json.JsonUtils;
+import com.example.security.user.FidoCredential;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
 import com.example.security.webauthn.yubico.YubicoUtils;
@@ -81,8 +82,15 @@ class RegistrationService {
         FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(credentialCreationOptions).response(finishRequest.getCredential()).build();
         RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
 
-        PublicKeyCredentialDescriptor keyId = registrationResult.getKeyId();
 
+        var fidoCredential = new FidoCredential(
+                registrationResult.getKeyId().getId().getBase64Url(),
+                registrationResult.getKeyId().getType().name(),
+                YubicoUtils.toUUID(credentialCreationOptions.getUser().getId()),
+                registrationResult.getPublicKeyCose().getBase64Url()
+                );
+
+        this.userService.addCredential(fidoCredential);
 
         RegistrationFinishResponse registrationFinishResponse = new RegistrationFinishResponse();
         registrationFinishResponse.setFlowId(finishRequest.getFlowId());

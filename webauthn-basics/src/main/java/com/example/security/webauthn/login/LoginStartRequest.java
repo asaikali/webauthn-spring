@@ -1,7 +1,5 @@
 package com.example.security.webauthn.login;
 
-import com.yubico.webauthn.AssertionRequest;
-
 class LoginStartRequest {
     private String email;
 

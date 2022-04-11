@@ -5,9 +5,12 @@ CREATE TABLE user_accounts
     email     VARCHAR(1024) UNIQUE NOT NULL
 );
 
-CREATE TABLE user_webauthn_credentials
+CREATE TABLE webauthn_user_credentials
 (
-    id UUID PRIMARY KEY
+    id      VARCHAR(2048) PRIMARY KEY,
+    public_key_cose TEXT NOT NULL,
+    user_id UUID NOT NULL,
+    type    TEXT NOT NULL
 );
 
 CREATE TABLE webauthn_registration_flow
@@ -23,9 +26,9 @@ CREATE TABLE webauthn_registration_flow
 
 CREATE TABLE webauthn_login_flow
 (
-    id                      UUID PRIMARY KEY,
-    start_request           TEXT,
-    start_response          TEXT,
-    finish_request          TEXT,
-    successful_login        BOOLEAN
+    id               UUID PRIMARY KEY,
+    start_request    TEXT,
+    start_response   TEXT,
+    finish_request   TEXT,
+    successful_login BOOLEAN
 );

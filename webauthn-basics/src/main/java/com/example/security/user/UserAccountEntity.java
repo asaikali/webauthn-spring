@@ -1,12 +1,10 @@
 package com.example.security.user;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
@@ -25,6 +23,17 @@ class UserAccountEntity {
 
   @Column(name = "email")
   private String email;
+
+  @OneToMany(mappedBy = "userId",cascade = CascadeType.ALL)
+  private Set<UserCredentialEntity> credentials = Set.of();
+
+  public Set<UserCredentialEntity> getCredentials() {
+    return credentials;
+  }
+
+  public void setCredentials(Set<UserCredentialEntity> credentials) {
+    this.credentials = credentials;
+  }
 
   public UUID getId() {
     return id;

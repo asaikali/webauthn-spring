@@ -1,8 +1,19 @@
 package com.example.security.user;
 
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 public interface UserService {
 
+  void addCredential(FidoCredential fidoCredential);
+
+  Optional<FidoCredential> findCredentialById(String id);
+
+  Optional<UserAccount> findUserById(UUID uuid);
+
+  Optional<UserAccount> findUserEmail(String email);
   /**
    * Create a new user account with provided email address and fullname. If the
    * there is an account with an existing email address the account is returned.
@@ -13,4 +24,6 @@ public interface UserService {
    * @return full details of the newly created user or loaded from the database
    */
   UserAccount createOrFindUser(String fullname, String email);
+
+  List<UserAccount> findAllUsersWithName(String name);
 }
