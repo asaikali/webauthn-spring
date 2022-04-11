@@ -5,6 +5,7 @@ import com.yubico.webauthn.data.AuthenticatorAttestationResponse;
 import com.yubico.webauthn.data.ClientRegistrationExtensionOutputs;
 import com.yubico.webauthn.data.PublicKeyCredential;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
+import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,18 +31,12 @@ class RegistrationController {
   }
 
   @PostMapping("/users/register/finish")
-  String finishRegistration(@RequestBody RegistrationFinishRequest request, HttpSession session) throws JsonProcessingException {
-
-
-    var options = (PublicKeyCredentialCreationOptions) session.getAttribute(START_REG_REQUEST);
-    if( options == null ) {
-      throw new IllegalArgumentException("Cloud not find start request corresponding to finish request");
+  RegistrationFinishResponse finishRegistration(@RequestBody RegistrationFinishRequest request, HttpSession session) throws RegistrationFailedException, JsonProcessingException {
+    RegistrationStartResponse response = (RegistrationStartResponse) session.getAttribute(START_REG_REQUEST);
+    if(response == null) {
+      throw new RuntimeException("Cloud Not find the original request");
     }
-
-    PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> credential;
-
-//    PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs>.PublicKeyCredentialBuilder
-//    this.webAuthnService.finishRegistration(options,credential);
-    return options.toJson();
+   var result = this.registrationService.finishRegistration(request,response.getCredentialCreationOptions());
+   return result;
   }
 }

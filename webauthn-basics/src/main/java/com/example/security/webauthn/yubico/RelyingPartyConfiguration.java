@@ -19,6 +19,7 @@ class RelyingPartyConfiguration
         var relyingParty = RelyingParty.builder()
                 .identity(rpIdentity)
                 .credentialRepository(credentialRepository)
+                .allowOriginPort(true)
                 .build();
 
         return relyingParty;

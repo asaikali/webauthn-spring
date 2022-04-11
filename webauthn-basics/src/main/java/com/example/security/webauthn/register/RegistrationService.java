@@ -4,7 +4,9 @@ import com.example.json.JsonUtils;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
 import com.example.security.webauthn.yubico.YubicoUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yubico.webauthn.FinishRegistrationOptions;
+import com.yubico.webauthn.RegistrationResult;
 import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartRegistrationOptions;
 import com.yubico.webauthn.data.*;
@@ -20,59 +22,76 @@ class RegistrationService {
 
     private final UserService userService;
     private final RelyingParty relyingParty;
-    private final RegistrationRepository registrationRepository;
+    private final RegistrationFlowRepository registrationFlowRepository;
 
-    RegistrationService(RelyingParty relyingParty, UserService userService, RegistrationRepository registrationRepository) {
+    RegistrationService(RelyingParty relyingParty, UserService userService, RegistrationFlowRepository registrationFlowRepository) {
         this.userService = userService;
         this.relyingParty = relyingParty;
-        this.registrationRepository = registrationRepository;
+        this.registrationFlowRepository = registrationFlowRepository;
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    RegistrationStartResponse startRegistration(RegistrationStartRequest startRequest) {
+    public RegistrationStartResponse startRegistration(RegistrationStartRequest startRequest) throws JsonProcessingException {
 
-      UserAccount user = this.userService.createOrFindUser(startRequest.getFullName(), startRequest.getEmail());
-      PublicKeyCredentialCreationOptions options = createPublicKeyCredentialCreationOptions(user);
-      RegistrationStartResponse startResponse = createRegistrationStartResponse(options);
-      logWorkflow(startRequest, startResponse);
+        UserAccount user = this.userService.createOrFindUser(startRequest.getFullName(), startRequest.getEmail());
+        PublicKeyCredentialCreationOptions options = createPublicKeyCredentialCreationOptions(user);
+        RegistrationStartResponse startResponse = createRegistrationStartResponse(options);
+        logWorkflow(startRequest, startResponse);
 
-      return startResponse;
+        return startResponse;
     }
 
-  private void logWorkflow(RegistrationStartRequest startRequest, RegistrationStartResponse startResponse) {
-    var registrationEntity = new RegistrationEntity();
-    registrationEntity.setId(startResponse.getFlowId());
-    registrationEntity.setStartRequest(JsonUtils.toJson(startRequest));
-    registrationEntity.setStartResponse(JsonUtils.toJson(startResponse));
-    this.registrationRepository.save(registrationEntity);
-  }
+    @Transactional(propagation = Propagation.REQUIRED)
+    public RegistrationFinishResponse finishRegistration(RegistrationFinishRequest finishRequest, PublicKeyCredentialCreationOptions credentialCreationOptions) throws RegistrationFailedException, JsonProcessingException {
 
-  private RegistrationStartResponse createRegistrationStartResponse(PublicKeyCredentialCreationOptions options) {
-    RegistrationStartResponse startResponse = new RegistrationStartResponse();
-    startResponse.setFlowId(UUID.randomUUID());
-    startResponse.setCredentialCreationOptions(options);
-    return startResponse;
-  }
+        RegistrationFlowEntity registrationFlow = this.registrationFlowRepository.findById(finishRequest.getFlowId()).orElseThrow( ()
+        -> new RuntimeException("Cloud not find a registration flow with id: " + finishRequest.getFlowId()));
 
-  private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(UserAccount user) {
-    var userIdentity = UserIdentity.builder().
-            name(user.name()).displayName(user.name()).id(YubicoUtils.toByteArray(user.id())).build();
+        //PublicKeyCredentialCreationOptions creationOptions = PublicKeyCredentialCreationOptions.fromJson(registrationFlow.getCreationOptions());
 
-    var authenticatorSelectionCriteria = AuthenticatorSelectionCriteria.builder()
-            .userVerification(UserVerificationRequirement.DISCOURAGED).build();
-
-    var startRegistrationOptions = StartRegistrationOptions.builder().user(userIdentity)
-            .timeout(30_000).authenticatorSelection(authenticatorSelectionCriteria).build();
-
-    PublicKeyCredentialCreationOptions options = this.relyingParty.startRegistration(startRegistrationOptions);
-
-    return options;
-  }
+        FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(credentialCreationOptions).response(finishRequest.getCredential()).build();
+        RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
 
 
-  void finishRegistration(PublicKeyCredentialCreationOptions request,
-                            PublicKeyCredential<AuthenticatorAttestationResponse, ClientRegistrationExtensionOutputs> response) throws RegistrationFailedException {
-        FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(request).response(response).build();
-        this.relyingParty.finishRegistration(options);
+        RegistrationFinishResponse registrationFinishResponse = new RegistrationFinishResponse();
+        registrationFinishResponse.setFlowId(finishRequest.getFlowId());
+        registrationFinishResponse.setRegistrationComplete(true);
+
+        registrationFlow.setFinishRequest(JsonUtils.toJson(finishRequest));
+        registrationFlow.setFinishResponse(JsonUtils.toJson(registrationFinishResponse));
+        registrationFlow.setRegistrationResult(JsonUtils.toJson(registrationResult));
+        return registrationFinishResponse;
     }
+
+    private void logWorkflow(RegistrationStartRequest startRequest, RegistrationStartResponse startResponse) throws JsonProcessingException {
+        var registrationEntity = new RegistrationFlowEntity();
+        registrationEntity.setId(startResponse.getFlowId());
+        registrationEntity.setStartRequest(JsonUtils.toJson(startRequest));
+        registrationEntity.setStartResponse(JsonUtils.toJson(startResponse));
+        registrationEntity.setRegistrationResult(startResponse.getCredentialCreationOptions().toJson());
+        this.registrationFlowRepository.save(registrationEntity);
+    }
+
+    private RegistrationStartResponse createRegistrationStartResponse(PublicKeyCredentialCreationOptions options) {
+        RegistrationStartResponse startResponse = new RegistrationStartResponse();
+        startResponse.setFlowId(UUID.randomUUID());
+        startResponse.setCredentialCreationOptions(options);
+        return startResponse;
+    }
+
+    private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(UserAccount user) {
+        var userIdentity = UserIdentity.builder().
+                name(user.name()).displayName(user.name()).id(YubicoUtils.toByteArray(user.id())).build();
+
+        var authenticatorSelectionCriteria = AuthenticatorSelectionCriteria.builder()
+                .userVerification(UserVerificationRequirement.DISCOURAGED).build();
+
+        var startRegistrationOptions = StartRegistrationOptions.builder().user(userIdentity)
+                .timeout(30_000).authenticatorSelection(authenticatorSelectionCriteria).build();
+
+        PublicKeyCredentialCreationOptions options = this.relyingParty.startRegistration(startRegistrationOptions);
+
+        return options;
+    }
+
 }

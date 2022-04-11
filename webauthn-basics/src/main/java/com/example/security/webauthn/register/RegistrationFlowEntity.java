@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name="webauthn_registration_flow")
-class RegistrationEntity {
+class RegistrationFlowEntity {
 
     @Id
     @Column(name="id")
@@ -24,6 +24,28 @@ class RegistrationEntity {
 
     @Column(name="finish_response")
     private String finishResponse;
+
+    @Column(name="yubico_reg_result")
+    private String registrationResult;
+
+    @Column(name="yubico_creation_options")
+    private String creationOptions;
+
+    public String getCreationOptions() {
+        return creationOptions;
+    }
+
+    public void setCreationOptions(String creationOptions) {
+        this.creationOptions = creationOptions;
+    }
+
+    public String getRegistrationResult() {
+        return registrationResult;
+    }
+
+    public void setRegistrationResult(String registrationResult) {
+        this.registrationResult = registrationResult;
+    }
 
     public UUID getId() {
         return id;

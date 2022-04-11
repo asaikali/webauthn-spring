@@ -36,7 +36,7 @@ public class WebSecurityConfig {
 
         http.authorizeRequests(authorizeRequests ->
                 authorizeRequests
-                        .mvcMatchers("/", "/register", "/users/register/start", "favicon.ico").permitAll()
+                        .mvcMatchers("/", "/register", "/users/register/start",  "/users/register/finish", "favicon.ico").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .anyRequest().authenticated());
 

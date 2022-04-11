@@ -1,22 +1,24 @@
 package com.example.security.webauthn.register;
 
+import java.util.UUID;
+
 public class RegistrationFinishResponse {
-  private String fullName;
-  private String email;
+  private UUID flowId;
+  private boolean registrationComplete;
 
-  public String getFullName() {
-    return fullName;
+  public UUID getFlowId() {
+    return flowId;
   }
 
-  public void setFullName(String fullName) {
-    this.fullName = fullName;
+  public void setFlowId(UUID flowId) {
+    this.flowId = flowId;
   }
 
-  public String getEmail() {
-    return email;
+  public boolean isRegistrationComplete() {
+    return registrationComplete;
   }
 
-  public void setEmail(String email) {
-    this.email = email;
+  public void setRegistrationComplete(boolean registrationComplete) {
+    this.registrationComplete = registrationComplete;
   }
 }

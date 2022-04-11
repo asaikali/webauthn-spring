@@ -114,18 +114,42 @@
 
     function finishRegistration(settings, newCredentialInfo) {
         const finishRequest = {
-            id: newCredentialInfo.id,
-            rawId: fromByteArray(newCredentialInfo.rawId),
-            type: newCredentialInfo.type,
-            response: {
-                clientDataJSON: fromByteArray(newCredentialInfo.response.clientDataJSON),
-                attestationObject: fromByteArray(newCredentialInfo.response.attestationObject)
-            },
-            clientExtensionResults: {}
+            flowId: settings.flowId,
+            credential: {
+                id: newCredentialInfo.id,
+                rawId: fromByteArray(newCredentialInfo.rawId),
+                type: newCredentialInfo.type,
+                response: {
+                    clientDataJSON: fromByteArray(newCredentialInfo.response.clientDataJSON),
+                    attestationObject: fromByteArray(newCredentialInfo.response.attestationObject)
+                },
+                clientExtensionResults: {}
+            }
         }
 
         console.log(finishRequest)
         logRequest(finishRequest)
+
+        $.ajax({
+            type: "POST",
+            url: "/users/register/finish",
+            data: JSON.stringify(finishRequest),
+            dataType: "json",
+            contentType: "application/json",
+            beforeSend: function (xhr) {
+                // spring security has CSRF protection turned on, if we don't
+                // set the correct CSRF header and value spring security will
+                // block the request from getting to the Spring MVC controller
+                // that will process this request.
+                const token = $("meta[name='_csrf']").attr("content")
+                const header = $("meta[name='_csrf_header']").attr("content")
+                xhr.setRequestHeader(header, token)
+            },
+            success: function (data, textStatus, jqXHR) {
+                logResponse(data)
+                createCredential(data)
+            }
+        });
     }
 
     function logTitle(title) {

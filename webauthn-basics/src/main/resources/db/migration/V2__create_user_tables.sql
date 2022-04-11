@@ -13,5 +13,7 @@ CREATE TABLE webauthn_registration_flow(
     start_request TEXT,
     start_response TEXT,
     finish_request TEXT,
-    finish_response TEXT
+    finish_response TEXT,
+    yubico_creation_options TEXT,
+    yubico_reg_result TEXT
 )
