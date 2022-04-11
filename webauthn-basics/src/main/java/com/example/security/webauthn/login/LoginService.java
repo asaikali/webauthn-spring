@@ -4,9 +4,9 @@ import com.example.json.JsonUtils;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
 import com.example.security.webauthn.yubico.YubicoUtils;
-import com.yubico.webauthn.AssertionRequest;
-import com.yubico.webauthn.RelyingParty;
-import com.yubico.webauthn.StartAssertionOptions;
+import com.yubico.webauthn.*;
+import com.yubico.webauthn.exception.AssertionFailedException;
+import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +24,18 @@ class LoginService {
         this.relyingParty = relyingParty;
         this.loginFlowRepository = loginFlowRepository;
         this.userService = userService;
+    }
+
+    public  AssertionResult finishLogin(LoginFinishRequest loginFinishRequest, AssertionRequest assertionRequest) throws AssertionFailedException {
+
+        FinishAssertionOptions options = FinishAssertionOptions.builder()
+                .request(assertionRequest)
+                .response(loginFinishRequest.getCredential())
+                .build();
+
+        AssertionResult assertionResult = this.relyingParty.finishAssertion(options);
+        return  assertionResult;
+
     }
 
     @Transactional(propagation = Propagation.REQUIRED)

@@ -86,8 +86,8 @@
         console.log(JSON.stringify(publicKey,2))
         navigator.credentials.get({'publicKey': publicKey})
             .then((getAssertionResponse) => {
-                alert('SUCCESSFULLY GOT AN ASSERTION! Open your browser console!')
                 console.log('SUCCESSFULLY GOT AN ASSERTION!', getAssertionResponse)
+                finishLogin(settings,getAssertionResponse)
             })
             .catch((error) => {
                 alert('Open your browser console!')
@@ -95,16 +95,18 @@
             })
     }
 
-    function finishRegistration(settings, newCredentialInfo) {
+    function finishLogin(settings, getAssertionResponse) {
         const finishRequest = {
             flowId: settings.flowId,
             credential: {
-                id: newCredentialInfo.id,
-                rawId: fromByteArray(newCredentialInfo.rawId),
-                type: newCredentialInfo.type,
+                id: getAssertionResponse.id,
+                rawId: fromByteArray(getAssertionResponse.rawId),
+                type: getAssertionResponse.type,
                 response: {
-                    clientDataJSON: fromByteArray(newCredentialInfo.response.clientDataJSON),
-                    attestationObject: fromByteArray(newCredentialInfo.response.attestationObject)
+                    authenticatorData: fromByteArray(getAssertionResponse.response.authenticatorData),
+                    clientDataJSON: fromByteArray(getAssertionResponse.response.clientDataJSON),
+                    signature: fromByteArray(getAssertionResponse.response.signature),
+                    userHandle: fromByteArray(getAssertionResponse.response.userHandle)
                 },
                 clientExtensionResults: {}
             }
@@ -115,7 +117,7 @@
 
         $.ajax({
             type: "POST",
-            url: "/users/register/finish",
+            url: "/users/login/finish",
             data: JSON.stringify(finishRequest),
             dataType: "json",
             contentType: "application/json",
@@ -130,7 +132,7 @@
             },
             success: function (data, textStatus, jqXHR) {
                 logResponse(data)
-                createCredential(data)
+
             }
         });
     }
