@@ -1,4 +1,4 @@
-package com.example.webauthn;
+package com.example.security.webauthn.yubico;
 
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
@@ -9,7 +9,7 @@ import java.util.Set;
 import org.springframework.stereotype.Repository;
 
 @Repository
-class CredentialRepositoryImpl  implements CredentialRepository {
+public class CredentialRepositoryImpl  implements CredentialRepository {
 
   @Override
   public Set<PublicKeyCredentialDescriptor> getCredentialIdsForUsername(String username) {

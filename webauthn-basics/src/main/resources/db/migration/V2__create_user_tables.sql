@@ -7,3 +7,11 @@ CREATE TABLE user_accounts(
 CREATE TABLE user_webauthn_credentials(
     id UUID PRIMARY KEY
 );
+
+CREATE TABLE webauthn_registration_flow(
+    id UUID PRIMARY KEY,
+    start_request TEXT,
+    start_response TEXT,
+    finish_request TEXT,
+    finish_response TEXT
+)

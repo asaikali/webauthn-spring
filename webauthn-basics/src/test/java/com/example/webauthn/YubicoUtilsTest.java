@@ -1,6 +1,7 @@
 package com.example.webauthn;
 
 
+import com.example.security.webauthn.yubico.YubicoUtils;
 import com.yubico.webauthn.data.ByteArray;
 import java.util.UUID;
 import org.assertj.core.api.Assertions;

@@ -1,10 +1,10 @@
-package com.example.webauthn;
+package com.example.security.webauthn.yubico;
 
 import com.yubico.webauthn.data.ByteArray;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-class YubicoUtils {
+public class YubicoUtils {
 
   public static ByteArray toByteArray(UUID uuid) {
     ByteBuffer buffer = ByteBuffer.wrap(new byte[16]);

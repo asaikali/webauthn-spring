@@ -1,6 +1,6 @@
-package com.example.webauthn;
+package com.example.security.webauthn.register;
 
-public class RegistrationResponse {
+public class RegistrationFinishResponse {
   private String fullName;
   private String email;
 

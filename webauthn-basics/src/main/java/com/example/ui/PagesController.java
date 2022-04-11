@@ -1,4 +1,4 @@
-package com.example;
+package com.example.ui;
 
 import java.time.LocalDateTime;
 import org.springframework.stereotype.Controller;

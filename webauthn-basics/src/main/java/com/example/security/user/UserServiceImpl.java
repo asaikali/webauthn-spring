@@ -1,4 +1,4 @@
-package com.example.user;
+package com.example.security.user;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;

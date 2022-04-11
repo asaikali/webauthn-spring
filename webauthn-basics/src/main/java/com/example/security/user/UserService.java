@@ -1,4 +1,4 @@
-package com.example.user;
+package com.example.security.user;
 
 
 public interface UserService {
