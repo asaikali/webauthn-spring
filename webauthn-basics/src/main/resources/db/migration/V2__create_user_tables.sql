@@ -7,10 +7,10 @@ CREATE TABLE user_accounts
 
 CREATE TABLE webauthn_user_credentials
 (
-    id      VARCHAR(2048) PRIMARY KEY,
+    id              VARCHAR(2048) PRIMARY KEY,
     public_key_cose TEXT NOT NULL,
-    user_id UUID NOT NULL,
-    type    TEXT NOT NULL
+    user_id         UUID NOT NULL,
+    type            TEXT NOT NULL
 );
 
 CREATE TABLE webauthn_registration_flow
