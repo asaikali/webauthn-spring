@@ -32,7 +32,10 @@ public class LoginController {
             throw new RuntimeException("Cloud Not find the original request");
         }
 
-        var result = this.loginService.finishLogin(request, assertionRequest);
+        var result = this.loginService.finishLogin(request);
+        if(result.isSuccess()) {
+            session.setAttribute(AssertionRequest.class.getName(),result);
+        }
         return result;
     }
 

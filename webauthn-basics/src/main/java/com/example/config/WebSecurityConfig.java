@@ -1,21 +1,23 @@
 package com.example.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
-import org.apache.catalina.connector.Connector;
-import org.springframework.beans.factory.annotation.Value;
+import com.example.security.webauthn.login.FidoAuthenticationProvider;
+import com.example.security.webauthn.login.FidoLoginSuccessHandler;
+import com.example.security.webauthn.login.FidoRememberMeService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.List;
 
 /**
  * This class uses the Lambda style DSL see the following blog posts for more info
@@ -27,7 +29,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class WebSecurityConfig {
 
     @Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, FidoRememberMeService rememberMeService) throws Exception {
 
         // for education purposes we turn on the h2-console so we need to make sure that
         // spring security does not block requests to the h2 console.
@@ -53,7 +55,10 @@ public class WebSecurityConfig {
 
         http.formLogin(formLogin ->
                 formLogin
+                        .defaultSuccessUrl("/quotes")
                         .loginPage("/login")
+                        .loginProcessingUrl("/fido/login")
+                        .successHandler( new FidoLoginSuccessHandler())
                         .permitAll()
         );
 
@@ -61,20 +66,24 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        UserBuilder users = User.withDefaultPasswordEncoder();
-
-        // add a regular user
-        UserDetails user = users.username("user").password("user").roles("USER").build();
-        manager.createUser(user);
-
-        // add an admin user
-        UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
-        manager.createUser(admin);
-
-        return manager;
+    AuthenticationManager authenticationManager(FidoAuthenticationProvider fidoAuthenticationProvider) {
+        return new ProviderManager(List.of( fidoAuthenticationProvider ));
     }
 
+//    @Bean
+//    public UserDetailsService userDetailsService() {
+//        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
+//        UserBuilder users = User.withDefaultPasswordEncoder();
+//
+//        // add a regular user
+//        UserDetails user = users.username("user").password("user").roles("USER").build();
+//        manager.createUser(user);
+//
+//        // add an admin user
+//        UserDetails admin = users.username("admin").password("admin").roles("USER", "ADMIN").build();
+//        manager.createUser(admin);
+//
+//        return manager;
+//    }
 
 }

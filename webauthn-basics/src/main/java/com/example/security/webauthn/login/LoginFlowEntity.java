@@ -28,6 +28,17 @@ class LoginFlowEntity {
     @Column(name="successful_login")
     private Boolean successfulLogin;
 
+    @Column(name="assertion_request")
+    private String assertionRequest;
+
+    public String getAssertionRequest() {
+        return assertionRequest;
+    }
+
+    public void setAssertionRequest(String assertionRequest) {
+        this.assertionRequest = assertionRequest;
+    }
+
     public UUID getId() {
         return id;
     }

@@ -24,7 +24,7 @@ class UserAccountEntity {
   @Column(name = "email")
   private String email;
 
-  @OneToMany(mappedBy = "userId",cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "userId",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private Set<UserCredentialEntity> credentials = Set.of();
 
   public Set<UserCredentialEntity> getCredentials() {

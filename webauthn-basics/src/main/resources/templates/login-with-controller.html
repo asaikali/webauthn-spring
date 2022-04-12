@@ -20,7 +20,6 @@
         Login
     </button>
 </form>
-
 <script>
 
 
@@ -114,18 +113,14 @@
         }
 
         console.log(finishRequest)
-        logJson("Login Finish Request", finishRequest)
+        logRequest(finishRequest)
 
-        const loginRequest = {
-            username: settings.assertionRequest.username,
-            password: JSON.stringify(finishRequest)
-        }
-        logJson("form post to spring login endpoint", loginRequest)
         $.ajax({
             type: "POST",
-            url: "/fido/login",
-            data: loginRequest,
+            url: "/users/login/finish",
+            data: JSON.stringify(finishRequest),
             dataType: "json",
+            contentType: "application/json",
             beforeSend: function (xhr) {
                 // spring security has CSRF protection turned on, if we don't
                 // set the correct CSRF header and value spring security will

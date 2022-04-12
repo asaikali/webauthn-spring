@@ -4,6 +4,7 @@ import com.example.json.JsonUtils;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
 import com.example.security.webauthn.yubico.YubicoUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yubico.webauthn.*;
 import com.yubico.webauthn.exception.AssertionFailedException;
 import com.yubico.webauthn.exception.RegistrationFailedException;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+
+import static com.example.json.JsonUtils.toJson;
 
 @Service
 class LoginService {
@@ -26,7 +29,18 @@ class LoginService {
         this.userService = userService;
     }
 
-    public  AssertionResult finishLogin(LoginFinishRequest loginFinishRequest, AssertionRequest assertionRequest) throws AssertionFailedException {
+    public  AssertionResult finishLogin(LoginFinishRequest loginFinishRequest) throws AssertionFailedException {
+
+        var loginFlowEntity = this.loginFlowRepository.findById(loginFinishRequest.getFlowId())
+                .orElseThrow(() -> new RuntimeException("flow id " + loginFinishRequest.getFlowId() + " not found"));
+
+        var assertionRequestJson = loginFlowEntity.getAssertionRequest();
+        AssertionRequest assertionRequest  = null;
+        try {
+            assertionRequest = AssertionRequest.fromJson(assertionRequestJson);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Cloud not deserialize the assertion Request");
+        }
 
         FinishAssertionOptions options = FinishAssertionOptions.builder()
                 .request(assertionRequest)
@@ -34,6 +48,7 @@ class LoginService {
                 .build();
 
         AssertionResult assertionResult = this.relyingParty.finishAssertion(options);
+
         return  assertionResult;
 
     }
@@ -58,8 +73,13 @@ class LoginService {
 
         LoginFlowEntity loginFlowEntity = new LoginFlowEntity();
         loginFlowEntity.setId(loginStartResponse.getFlowId());
-        loginFlowEntity.setStartRequest(JsonUtils.toJson(loginStartRequest));
-        loginFlowEntity.setStartResponse(JsonUtils.toJson(loginStartResponse));
+        loginFlowEntity.setStartRequest(toJson(loginStartRequest));
+        loginFlowEntity.setStartResponse(toJson(loginStartResponse));
+        try {
+            loginFlowEntity.setAssertionRequest(assertionRequest.toJson());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         this.loginFlowRepository.save(loginFlowEntity);
 
         return loginStartResponse;

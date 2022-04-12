@@ -29,6 +29,7 @@ CREATE TABLE webauthn_login_flow
     id               UUID PRIMARY KEY,
     start_request    TEXT,
     start_response   TEXT,
+    assertion_request TEXT,
     finish_request   TEXT,
     successful_login BOOLEAN
 );
