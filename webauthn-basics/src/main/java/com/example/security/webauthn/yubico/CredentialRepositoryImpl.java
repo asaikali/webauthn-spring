@@ -30,16 +30,19 @@ public class CredentialRepositoryImpl  implements CredentialRepository {
 
     // in our implementation the usernames are email addresses
 
-    return this.userService.findUserEmail(username).map( user ->
+    var result=  this.userService.findUserEmail(username).map( user ->
                     user.credentials().stream()
                             .map(CredentialRepositoryImpl::toPublicKeyCredentialDescriptor)
                             .collect(Collectors.toSet())
             ).orElse(Set.of());
+
+    return result;
   }
 
   @Override
   public Optional<ByteArray> getUserHandleForUsername(String username) {
-   return this.userService.findUserEmail(username).map( user -> YubicoUtils.toByteArray(user.id()));
+   var result =  this.userService.findUserEmail(username).map( user -> YubicoUtils.toByteArray(user.id()));
+   return result;
   }
 
   @Override
@@ -47,7 +50,8 @@ public class CredentialRepositoryImpl  implements CredentialRepository {
     if(userHandle.isEmpty()) {
       return Optional.empty();
     }
-    return this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map( userAccount -> userAccount.email());
+    var result = this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map( userAccount -> userAccount.email());
+    return result;
   }
 
   @Override
@@ -55,7 +59,7 @@ public class CredentialRepositoryImpl  implements CredentialRepository {
     // user can have muliple credentials so we are looking first for the user,
     // then for a credential that matches;
 
-    return  this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map(
+    var result =  this.userService.findUserById(YubicoUtils.toUUID(userHandle)).map(
        user -> user.credentials()).orElse(Set.of()).stream()
                .filter(  cred -> {
                  try {
@@ -66,14 +70,18 @@ public class CredentialRepositoryImpl  implements CredentialRepository {
                })
                .findFirst()
                .map(CredentialRepositoryImpl::toRegisteredCredential);
+
+    return result;
   }
 
   @Override
   public Set<RegisteredCredential> lookupAll(ByteArray credentialId) {
-    return this.userService.findCredentialById(credentialId.getBase64Url())
+    var result = this.userService.findCredentialById(credentialId.getBase64Url())
             .map( CredentialRepositoryImpl::toRegisteredCredential)
             .map( r -> Set.of(r))
             .orElse(Set.of());
+
+    return result;
   }
 
 

@@ -105,8 +105,8 @@
                 response: {
                     authenticatorData: fromByteArray(getAssertionResponse.response.authenticatorData),
                     clientDataJSON: fromByteArray(getAssertionResponse.response.clientDataJSON),
-                    signature: fromByteArray(getAssertionResponse.response.signature),
-                    userHandle: fromByteArray(getAssertionResponse.response.userHandle)
+                    signature: fromByteArray(getAssertionResponse.response.signature)
+                   // userHandle: fromByteArray(getAssertionResponse.response.userHandle)
                 },
                 clientExtensionResults: {}
             }

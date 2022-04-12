@@ -59,14 +59,21 @@ class RegistrationService {
     }
 
     private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(UserAccount user) {
-        var userIdentity = UserIdentity.builder().
-                name(user.email()).displayName(user.name()).id(YubicoUtils.toByteArray(user.id())).build();
+        var userIdentity = UserIdentity.builder()
+                .name(user.email())
+                .displayName(user.name())
+                .id(YubicoUtils.toByteArray(user.id()))
+                .build();
 
         var authenticatorSelectionCriteria = AuthenticatorSelectionCriteria.builder()
-                .userVerification(UserVerificationRequirement.DISCOURAGED).build();
+                .userVerification(UserVerificationRequirement.DISCOURAGED)
+                .build();
 
-        var startRegistrationOptions = StartRegistrationOptions.builder().user(userIdentity)
-                .timeout(30_000).authenticatorSelection(authenticatorSelectionCriteria).build();
+        var startRegistrationOptions = StartRegistrationOptions.builder()
+                .user(userIdentity)
+                .timeout(30_000)
+                .authenticatorSelection(authenticatorSelectionCriteria)
+                .build();
 
         PublicKeyCredentialCreationOptions options = this.relyingParty.startRegistration(startRegistrationOptions);
 
@@ -76,10 +83,8 @@ class RegistrationService {
     @Transactional(propagation = Propagation.REQUIRED)
     public RegistrationFinishResponse finishRegistration(RegistrationFinishRequest finishRequest, PublicKeyCredentialCreationOptions credentialCreationOptions) throws RegistrationFailedException, JsonProcessingException {
 
-        
         FinishRegistrationOptions options = FinishRegistrationOptions.builder().request(credentialCreationOptions).response(finishRequest.getCredential()).build();
         RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
-
 
         var fidoCredential = new FidoCredential(
                 registrationResult.getKeyId().getId().getBase64Url(),

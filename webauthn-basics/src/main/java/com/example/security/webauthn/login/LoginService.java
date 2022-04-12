@@ -47,7 +47,8 @@ class LoginService {
         // make the assertion request to send to the client
         StartAssertionOptions options = StartAssertionOptions.builder()
                 .timeout(60_000)
-                .userHandle(YubicoUtils.toByteArray(user.id()))
+                .username(loginStartRequest.getEmail())
+           //     .userHandle(YubicoUtils.toByteArray(user.id()))
                 .build();
         AssertionRequest assertionRequest =  this.relyingParty.startAssertion(options);
 
