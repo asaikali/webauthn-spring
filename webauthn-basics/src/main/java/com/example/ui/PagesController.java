@@ -23,4 +23,9 @@ class PagesController {
   String login() {
     return "login";
   }
+
+  @GetMapping("/quotes")
+  String quotes(){
+    return "quotes";
+  }
 }

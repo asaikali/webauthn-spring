@@ -22,9 +22,4 @@ public class QuotesController {
     Quote result = quoteRepository.findRandomQuote();
     return result;
   }
-
-  @GetMapping("/quotes")
-  public String quotes(){
-    return "quotes";
-  }
 }
