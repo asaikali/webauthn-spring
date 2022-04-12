@@ -52,9 +52,9 @@ class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public UserAccount createOrFindUser(String fullName, String email) {
-        if (fullName == null || fullName.isBlank()) {
-            throw new IllegalArgumentException("fullName can't be blank");
+    public UserAccount createOrFindUser(String displayName, String email) {
+        if (displayName == null || displayName.isBlank()) {
+            throw new IllegalArgumentException("displayName can't be blank");
         }
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("email can't be blank");
@@ -64,7 +64,7 @@ class UserServiceImpl implements UserService {
                 () -> {
                     UserAccountEntity result = new UserAccountEntity();
                     result.setEmail(email);
-                    result.setFullName(fullName);
+                    result.setFullName(displayName);
                     return this.userAccountRepository.save(result);
                 }
         );
