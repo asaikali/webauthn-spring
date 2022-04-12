@@ -30,6 +30,6 @@ CREATE TABLE webauthn_login_flow
     start_request    TEXT,
     start_response   TEXT,
     assertion_request TEXT,
-    finish_request   TEXT,
+    assertion_result  TEXT,
     successful_login BOOLEAN
 );

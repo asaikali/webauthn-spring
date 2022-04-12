@@ -22,14 +22,22 @@ class LoginFlowEntity {
     @Column(name="start_response")
     private String startResponse;
 
-    @Column(name="finish_request")
-    private String finishRequest;
-
     @Column(name="successful_login")
     private Boolean successfulLogin;
 
     @Column(name="assertion_request")
     private String assertionRequest;
+
+    @Column(name="assertion_result")
+    private String assertionResult;
+
+    public String getAssertionResult() {
+        return assertionResult;
+    }
+
+    public void setAssertionResult(String assertionResponse) {
+        this.assertionResult = assertionResponse;
+    }
 
     public String getAssertionRequest() {
         return assertionRequest;
@@ -63,13 +71,6 @@ class LoginFlowEntity {
         this.startResponse = startResponse;
     }
 
-    public String getFinishRequest() {
-        return finishRequest;
-    }
-
-    public void setFinishRequest(String finishRequest) {
-        this.finishRequest = finishRequest;
-    }
 
     public Boolean getSuccessfulLogin() {
         return successfulLogin;

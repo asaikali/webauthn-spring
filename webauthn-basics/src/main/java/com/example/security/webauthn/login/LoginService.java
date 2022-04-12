@@ -3,11 +3,9 @@ package com.example.security.webauthn.login;
 import com.example.json.JsonUtils;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
-import com.example.security.webauthn.yubico.YubicoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yubico.webauthn.*;
 import com.yubico.webauthn.exception.AssertionFailedException;
-import com.yubico.webauthn.exception.RegistrationFailedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +27,7 @@ class LoginService {
         this.userService = userService;
     }
 
+    @Transactional(propagation = Propagation.REQUIRED)
     public  AssertionResult finishLogin(LoginFinishRequest loginFinishRequest) throws AssertionFailedException {
 
         var loginFlowEntity = this.loginFlowRepository.findById(loginFinishRequest.getFlowId())
@@ -48,6 +47,9 @@ class LoginService {
                 .build();
 
         AssertionResult assertionResult = this.relyingParty.finishAssertion(options);
+
+        loginFlowEntity.setAssertionResult(JsonUtils.toJson(assertionResult));
+        loginFlowEntity.setSuccessfulLogin(assertionResult.isSuccess());
 
         return  assertionResult;
 
