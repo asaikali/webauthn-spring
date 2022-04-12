@@ -61,7 +61,7 @@ class RegistrationService {
     private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(UserAccount user) {
         var userIdentity = UserIdentity.builder()
                 .name(user.email())
-                .displayName(user.name())
+                .displayName(user.displayName())
                 .id(YubicoUtils.toByteArray(user.id()))
                 .build();
 
