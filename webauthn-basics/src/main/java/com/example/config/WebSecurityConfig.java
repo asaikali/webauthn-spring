@@ -2,19 +2,12 @@ package com.example.config;
 
 import com.example.security.webauthn.login.FidoAuthenticationProvider;
 import com.example.security.webauthn.login.FidoLoginSuccessHandler;
-import com.example.security.webauthn.login.FidoRememberMeService;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.User.UserBuilder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.List;
@@ -29,7 +22,7 @@ import java.util.List;
 public class WebSecurityConfig {
 
     @Bean
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, FidoRememberMeService rememberMeService) throws Exception {
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
         // for education purposes we turn on the h2-console so we need to make sure that
         // spring security does not block requests to the h2 console.
