@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>com.yubico</groupId>
 			<artifactId>webauthn-server-core</artifactId>
-			<version>1.12.2</version>
+			<version>1.12.4</version>
 		</dependency>
 
 		<dependency>
