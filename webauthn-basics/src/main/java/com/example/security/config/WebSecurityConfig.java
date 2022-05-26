@@ -1,4 +1,4 @@
-package com.example.config;
+package com.example.security.config;
 
 import com.example.security.webauthn.login.FidoAuthenticationConverter;
 import com.example.security.webauthn.login.FidoAuthenticationManager;
@@ -15,7 +15,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 /**
  * This class uses the Lambda style DSL see the following blog posts for more info
  *
- * <p>https://spring.io/blog/2019/11/21/spring-security-lambda-dsl
+ * https://spring.io/blog/2019/11/21/spring-security-lambda-dsl
  * https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
  */
 @EnableWebSecurity
