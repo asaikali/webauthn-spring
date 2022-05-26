@@ -9,5 +9,4 @@ interface UserAccountRepository extends JpaRepository<UserAccountEntity, UUID> {
 
   Optional<UserAccountEntity> findByEmail(String email);
 
-  List<UserAccountEntity> findByFullName(String email);
 }

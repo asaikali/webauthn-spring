@@ -35,7 +35,7 @@ class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Optional<FidoCredential> findCredentialById(String credintalId) {
+  public Optional<FidoCredential> findCredentialById(String credentialId) {
     return Optional.empty();
   }
 
