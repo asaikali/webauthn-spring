@@ -5,6 +5,9 @@ import java.util.UUID;
 import javax.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
+/**
+ * Database representation of the user account, this is only used inside this package.
+ */
 @Entity
 @Table(name = "user_accounts")
 class UserAccountEntity {
@@ -21,13 +24,13 @@ class UserAccountEntity {
   private String email;
 
   @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  private Set<UserCredentialEntity> credentials = Set.of();
+  private Set<FidoCredentialEntity> credentials = Set.of();
 
-  public Set<UserCredentialEntity> getCredentials() {
+  public Set<FidoCredentialEntity> getCredentials() {
     return credentials;
   }
 
-  public void setCredentials(Set<UserCredentialEntity> credentials) {
+  public void setCredentials(Set<FidoCredentialEntity> credentials) {
     this.credentials = credentials;
   }
 

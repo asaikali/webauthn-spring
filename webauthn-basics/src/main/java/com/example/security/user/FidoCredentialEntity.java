@@ -7,9 +7,12 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * Database representation of a fido credential entity
+ */
 @Entity
 @Table(name = "webauthn_user_credentials")
-public class UserCredentialEntity {
+public class FidoCredentialEntity {
 
   @Id
   @Column(name = "id")
@@ -60,7 +63,7 @@ public class UserCredentialEntity {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    UserCredentialEntity that = (UserCredentialEntity) o;
+    FidoCredentialEntity that = (FidoCredentialEntity) o;
     return id.equals(that.id)
         && userId.equals(that.userId)
         && type.equals(that.type)

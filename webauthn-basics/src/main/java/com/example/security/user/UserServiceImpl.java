@@ -1,6 +1,5 @@
 package com.example.security.user;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -21,28 +20,28 @@ class UserServiceImpl implements UserService {
   @Override
   @Transactional(propagation = Propagation.REQUIRED)
   public void addCredential(FidoCredential fidoCredential) {
-    UserCredentialEntity userCredentialEntity = new UserCredentialEntity();
-    userCredentialEntity.setUserId(fidoCredential.userid());
-    userCredentialEntity.setType(fidoCredential.keyType());
-    userCredentialEntity.setPublicKeyCose(fidoCredential.publicKeyCose());
-    userCredentialEntity.setId(fidoCredential.keyId());
+    FidoCredentialEntity fidoCredentialEntity = new FidoCredentialEntity();
+    fidoCredentialEntity.setUserId(fidoCredential.userid());
+    fidoCredentialEntity.setType(fidoCredential.keyType());
+    fidoCredentialEntity.setPublicKeyCose(fidoCredential.publicKeyCose());
+    fidoCredentialEntity.setId(fidoCredential.keyId());
 
     UserAccountEntity account =
         this.userAccountRepository
             .findById(fidoCredential.userid())
             .orElseThrow(
                 () -> new RuntimeException("can't add a credential to a user that does not exist"));
-    account.getCredentials().add(userCredentialEntity);
+    account.getCredentials().add(fidoCredentialEntity);
   }
 
   @Override
-  public Optional<FidoCredential> findCredentialById(String id) {
+  public Optional<FidoCredential> findCredentialById(String credintalId) {
     return Optional.empty();
   }
 
   @Override
-  public Optional<UserAccount> findUserById(UUID uuid) {
-    return this.userAccountRepository.findById(uuid).map(UserServiceImpl::toUserAccount);
+  public Optional<UserAccount> findUserById(UUID userId) {
+    return this.userAccountRepository.findById(userId).map(UserServiceImpl::toUserAccount);
   }
 
   @Override
@@ -77,17 +76,6 @@ class UserServiceImpl implements UserService {
         userAccountEntity.getFullName(),
         userAccountEntity.getEmail(),
         Set.of());
-  }
-
-  @Override
-  @Transactional(propagation = Propagation.REQUIRED)
-  public List<UserAccount> findAllUsersWithName(String name) {
-    var result =
-        this.userAccountRepository.findByFullName(name).stream()
-            .map(UserServiceImpl::toUserAccount)
-            .collect(Collectors.toList());
-
-    return result;
   }
 
   private static UserAccount toUserAccount(UserAccountEntity accountEntity) {
