@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:db
+    username: sa
+    password: ""
+    driverClassName: org.h2.Driver
+  jpa:
+    spring.jpa.database-platform: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: "/h2-console"
+
+management:
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*" # don't do this in production, it is too risky, se we can write less instructions for the lab
+
+server:
+  port: 9090
+  ssl:
+    enabled: true
+    key-store-type: PKCS12
+    key-store: fido-auth-server/keystore.p12
+    key-password: changeit
+    key-alias: demo
+
+
+http:
+  port: 9091
+
+logging:
+  level:
+    org.springframework.security: info
+

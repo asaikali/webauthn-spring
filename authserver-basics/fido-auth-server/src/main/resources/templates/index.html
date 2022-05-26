@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebAuthn Demo</title>
+</head>
+<body>
+
+<H1>Fido Enabled Auth Server</H1>
+
+Pick an action to perform:
+
+<ol>
+  <li><a href="/register"> Create an account without a password</a></li>
+  <li><a href="/webauthn/login">Login with your account without a password</a></li>
+  <li><a href="/login">Login with a password</a></li>
+  <li><a href="/time">Access protected page on auth server</a></li>
+</ol>
+
+Current time on the server is : <span th:text="${time}"></span>
+</body>
+</html>

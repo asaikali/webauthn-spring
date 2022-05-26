@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Log In</title>
+
+    <script src="/js/base64/base64.js"></script>
+    <script src="/js/jquery/jquery-3.6.0.min.js"></script>
+
+    <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
+    <meta th:name="_csrf" th:content="${_csrf.token}"/>
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+</head>
+<body>
+<h1>Lets log in without a password</h1>
+<form id="loginForm">
+    <div>
+        <input id="email" type="email" name="email" placeholder="email"/>
+    </div>
+    <button type="submit">
+        Login
+    </button>
+</form>
+
+<script>
+    $(document).ready(function () {
+        $("#loginForm").submit(function (event) {
+            const formData = {
+                email: $("#email").val()
+            };
+            startLogin(formData);
+            event.preventDefault();
+        });
+    });
+
+    function startLogin(formData) {
+        logTitle("Step 0: Start the login process with the server")
+        logRequest(formData)
+        $.ajax({
+            type: "POST",
+            url: "/webauthn/login/start",
+            data: JSON.stringify(formData),
+            dataType: "json",
+            contentType: "application/json",
+            beforeSend: function (xhr) {
+                // spring security has CSRF protection turned on, if we don't
+                // set the correct CSRF header and value spring security will
+                // block the request from getting to the Spring MVC controller
+                // that will process this request.
+                const token = $("meta[name='_csrf']").attr("content")
+                const header = $("meta[name='_csrf_header']").attr("content")
+                xhr.setRequestHeader(header, token)
+            },
+            success: function (data, textStatus, jqXHR) {
+                logResponse(data)
+                createCredential(data)
+            }
+        });
+    }
+
+    /**
+     * This functions calls out the WebAuthentication browser API to have the authenticator
+     * create a public private key pair.
+     * @param settings
+     */
+
+    function createCredential(settings) {
+        logTitle("Step 1: Use options from server to create credential in authenticator")
+        let creds = [];
+        settings.assertionRequest.publicKeyCredentialRequestOptions.allowCredentials.forEach(
+            cred => {
+                const result = {
+                    type: cred.type,
+                    id: toByteArray(cred.id)
+                }
+                creds.push(result)
+            }
+        )
+        const publicKey = {
+            challenge: toByteArray(settings.assertionRequest.publicKeyCredentialRequestOptions.challenge),
+            allowCredentials: creds
+        }
+
+        console.log(publicKey)
+        console.log(JSON.stringify(publicKey,2))
+        navigator.credentials.get({'publicKey': publicKey})
+            .then((getAssertionResponse) => {
+                console.log('SUCCESSFULLY GOT AN ASSERTION!', getAssertionResponse)
+                finishLogin(settings,getAssertionResponse)
+            })
+            .catch((error) => {
+                alert('Open your browser console!')
+                console.log('FAIL', error)
+            })
+    }
+
+    function finishLogin(settings, getAssertionResponse) {
+        const finishRequest = {
+            flowId: settings.flowId,
+            credential: {
+                id: getAssertionResponse.id,
+                rawId: fromByteArray(getAssertionResponse.rawId),
+                type: getAssertionResponse.type,
+                response: {
+                    authenticatorData: fromByteArray(getAssertionResponse.response.authenticatorData),
+                    clientDataJSON: fromByteArray(getAssertionResponse.response.clientDataJSON),
+                    signature: fromByteArray(getAssertionResponse.response.signature)
+                   // userHandle: fromByteArray(getAssertionResponse.response.userHandle)
+                },
+                clientExtensionResults: {}
+            }
+        }
+
+        console.log(finishRequest)
+        logJson("Login Finish Request", finishRequest)
+
+        const loginRequest = {
+            username: settings.assertionRequest.username,
+            finishRequest: JSON.stringify(finishRequest)
+        }
+        logJson("form post to spring login endpoint", loginRequest)
+        $.ajax({
+            type: "POST",
+            url: "/fido/login",
+            data: loginRequest,
+            dataType: "json",
+            beforeSend: function (xhr) {
+                // spring security has CSRF protection turned on, if we don't
+                // set the correct CSRF header and value spring security will
+                // block the request from getting to the Spring MVC controller
+                // that will process this request.
+                const token = $("meta[name='_csrf']").attr("content")
+                const header = $("meta[name='_csrf_header']").attr("content")
+                xhr.setRequestHeader(header, token)
+            },
+            success: function (data, textStatus, jqXHR) {
+                logResponse(data)
+
+            }
+        });
+    }
+
+    function logTitle(title) {
+        const h2 = $('<h2></h2>').text(title)
+        $("body").append(h2)
+    }
+
+    function logJson(title, data) {
+        const response = JSON.stringify(data, null, 2);
+        const p = $('<p>' + title + '</p>')
+        const pre = $('<pre></pre>').text(response)
+        $("body").append(p, pre)
+    }
+
+    function logRequest(data) {
+        const response = JSON.stringify(data, null, 2);
+        const p = $('<p>Request:</p>')
+        const pre = $('<pre></pre>').text(response)
+        $("body").append(p, pre)
+    }
+
+    function logResponse(data) {
+        const response = JSON.stringify(data, null, 2);
+        const p = $('<p>Response:</p>')
+        const pre = $('<pre></pre>').text(response)
+        $("body").append(p, pre)
+    }
+</script>
+</body>
+</html>
+
