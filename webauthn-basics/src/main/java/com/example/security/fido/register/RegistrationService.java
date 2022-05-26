@@ -33,6 +33,19 @@ class RegistrationService {
     this.registrationFlowRepository = registrationFlowRepository;
   }
 
+  /**
+   * Kicks off the registration process by creating a new user account adding it to the database. Then the server
+   * configures how the WebAuthn api should be called, this way the server can be as strict as it wants for example
+   * the server can demand info about the authenticator that will be used so that it can only accept approved
+   * authenticators.
+   *
+   * The rest of this method needs to be saved into the http session because the finish step requires the excat
+   * java object that was returned from this method as an input.
+   *
+   * @param startRequest the json request sent from the browser
+   * @return a json object with configuration details for the javascript in the browser to use to call the webAuthn api
+   *
+   */
   @Transactional(propagation = Propagation.REQUIRED)
   public RegistrationStartResponse startRegistration(RegistrationStartRequest startRequest)
       throws JsonProcessingException {
@@ -92,6 +105,15 @@ class RegistrationService {
     return options;
   }
 
+  /**
+   * This method associates a FIDO2 authenticator with a user account, by saving the details of the authenticator
+   * generated public key and other metadata in the database.
+   *
+   * @param finishRequest the json request sen from the browser contains the public key of the user
+   * @param credentialCreationOptions the options generated from the call to startRegistration() and should have been
+   *                                   pulled out of the http session by the controller that calls this method
+   * @return JSON object indicating success or failure of the registration
+   */
   @Transactional(propagation = Propagation.REQUIRED)
   public RegistrationFinishResponse finishRegistration(
       RegistrationFinishRequest finishRequest,

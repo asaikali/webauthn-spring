@@ -16,6 +16,8 @@ class RegistrationController {
     this.registrationService = registrationService;
   }
 
+
+
   @PostMapping("/webauthn/register/start")
   RegistrationStartResponse startRegisteration(
       @RequestBody RegistrationStartRequest request, HttpSession session)

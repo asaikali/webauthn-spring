@@ -27,6 +27,14 @@ class LoginService {
     this.userService = userService;
   }
 
+  /**
+   * Receives the solution to the math challenge from the start method, validates that the solution is correct
+   * applies the validation logic of the FIDO protocol, and then it produces a result.
+   *
+   * @param loginFinishRequest
+   * @return
+   * @throws AssertionFailedException
+   */
   @Transactional(propagation = Propagation.REQUIRED)
   public AssertionResult finishLogin(LoginFinishRequest loginFinishRequest)
       throws AssertionFailedException {
@@ -61,6 +69,16 @@ class LoginService {
     return assertionResult;
   }
 
+  /**
+   * This method is used to determine if a user exists and then sends back to the browser a list of
+   * public keys that can be used to log in this way the browser can pick the right authenticator and
+   * complete the login process. The response includes a math challenge that the authenticator needs
+   * to solve using the users private key so that the server can tell that the user is who they say
+   * they are.
+   *
+   * @param loginStartRequest info containing the user that wants to login
+   * @return configuration for the browser to use to interact with the FIDO2 authenticator using WebAuthn browser API
+   */
   @Transactional(propagation = Propagation.REQUIRED)
   public LoginStartResponse startLogin(LoginStartRequest loginStartRequest) {
 
