@@ -22,8 +22,6 @@
 </form>
 
 <script>
-
-
     $(document).ready(function () {
         $("#loginForm").submit(function (event) {
             const formData = {
@@ -33,7 +31,6 @@
             event.preventDefault();
         });
     });
-
 
     function startLogin(formData) {
         logTitle("Step 0: Start the login process with the server")
@@ -154,7 +151,6 @@
         $("body").append(p, pre)
     }
 
-
     function logRequest(data) {
         const response = JSON.stringify(data, null, 2);
         const p = $('<p>Request:</p>')
@@ -162,15 +158,12 @@
         $("body").append(p, pre)
     }
 
-
     function logResponse(data) {
         const response = JSON.stringify(data, null, 2);
         const p = $('<p>Response:</p>')
         const pre = $('<pre></pre>').text(response)
         $("body").append(p, pre)
     }
-
-
 </script>
 </body>
 </html>
