@@ -1,10 +1,8 @@
 package com.example.security.user;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
-
 import org.hibernate.annotations.GenericGenerator;
 
 @Entity
@@ -13,9 +11,7 @@ class UserAccountEntity {
 
   @Id
   @GeneratedValue(generator = "UUID")
-  @GenericGenerator(
-      name = "UUID",
-      strategy = "org.hibernate.id.UUIDGenerator")
+  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
   private UUID id;
 
   @Column(name = "full_name")
@@ -24,7 +20,7 @@ class UserAccountEntity {
   @Column(name = "email")
   private String email;
 
-  @OneToMany(mappedBy = "userId",cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
   private Set<UserCredentialEntity> credentials = Set.of();
 
   public Set<UserCredentialEntity> getCredentials() {

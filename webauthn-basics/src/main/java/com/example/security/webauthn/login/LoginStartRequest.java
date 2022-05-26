@@ -1,15 +1,13 @@
 package com.example.security.webauthn.login;
 
 class LoginStartRequest {
-    private String email;
+  private String email;
 
-    public String getEmail() {
-        return email;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-
+  public void setEmail(String email) {
+    this.email = email;
+  }
 }

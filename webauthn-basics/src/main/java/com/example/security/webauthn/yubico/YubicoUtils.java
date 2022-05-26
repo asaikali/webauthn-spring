@@ -13,7 +13,7 @@ public class YubicoUtils {
     return new ByteArray(buffer.array());
   }
 
-  public static UUID toUUID( ByteArray byteArray) {
+  public static UUID toUUID(ByteArray byteArray) {
     ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray.getBytes());
     long high = byteBuffer.getLong();
     long low = byteBuffer.getLong();

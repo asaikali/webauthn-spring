@@ -1,6 +1,5 @@
 package com.example.webauthn;
 
-
 import com.example.security.webauthn.yubico.YubicoUtils;
 import com.yubico.webauthn.data.ByteArray;
 import java.util.UUID;
@@ -10,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class YubicoUtilsTest {
 
   @Test
-  public void testByteArrayToUUIDConversion(){
+  public void testByteArrayToUUIDConversion() {
     UUID uuid1 = UUID.randomUUID();
     ByteArray byteArray = YubicoUtils.toByteArray(uuid1);
 
@@ -18,5 +17,4 @@ class YubicoUtilsTest {
 
     Assertions.assertThat(uuid1).isEqualTo(uuid2);
   }
-
 }

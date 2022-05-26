@@ -1,0 +1,2 @@
+# shortcut to running maven build
+./mvnw  spotless:apply package

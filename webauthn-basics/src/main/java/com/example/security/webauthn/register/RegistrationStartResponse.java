@@ -3,7 +3,6 @@ package com.example.security.webauthn.register;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
-
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
@@ -23,7 +22,8 @@ class RegistrationStartResponse {
     return credentialCreationOptions;
   }
 
-  public void setCredentialCreationOptions(PublicKeyCredentialCreationOptions credentialCreationOptions) {
+  public void setCredentialCreationOptions(
+      PublicKeyCredentialCreationOptions credentialCreationOptions) {
     this.credentialCreationOptions = credentialCreationOptions;
   }
 }

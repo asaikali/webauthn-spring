@@ -25,7 +25,7 @@ class PagesController {
   }
 
   @GetMapping("/quotes")
-  String quotes(){
+  String quotes() {
     return "quotes";
   }
 }
