@@ -1,21 +1,33 @@
 package com.example.security.webauthn.login;
 
-import com.example.json.JsonUtils;
-import com.yubico.webauthn.AssertionResult;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 
-import java.util.Collection;
+public class FidoAuthenticationToken extends AbstractAuthenticationToken {
+    private final String username;
+    private final LoginFinishRequest loginFinishRequest;
 
-public class FidoAuthenticationToken extends UsernamePasswordAuthenticationToken {
-    private final String assertionResultJson;
-
-    public FidoAuthenticationToken(String email, AssertionResult assertionResult, Collection<? extends GrantedAuthority> authorities) {
-        super(email, null, authorities);
-        this.assertionResultJson = JsonUtils.toJson(assertionResult);
+    public FidoAuthenticationToken(String username, LoginFinishRequest loginFinishRequest) {
+        super(null);
+        this.username = username;
+        this.loginFinishRequest = loginFinishRequest;
     }
 
-    public String getAssertionResultJson() {
-        return assertionResultJson;
+    public String getUsername() {
+        return username;
     }
+
+    public LoginFinishRequest getLoginFinishRequest() {
+        return loginFinishRequest;
+    }
+
+    @Override
+    public Object getCredentials() {
+        return loginFinishRequest;
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return username;
+    }
+
 }

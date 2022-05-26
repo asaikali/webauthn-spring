@@ -3,7 +3,7 @@
 <head>
     <title>Log In</title>
 
-    <script src="js/base64/base64.js"></script>
+    <script src="/js/base64/base64.js"></script>
     <script src="/js/jquery/jquery-3.6.0.min.js"></script>
 
     <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
@@ -118,7 +118,7 @@
 
         const loginRequest = {
             username: settings.assertionRequest.username,
-            password: JSON.stringify(finishRequest)
+            finishRequest: JSON.stringify(finishRequest)
         }
         logJson("form post to spring login endpoint", loginRequest)
         $.ajax({
