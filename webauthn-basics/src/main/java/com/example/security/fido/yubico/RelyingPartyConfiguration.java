@@ -1,4 +1,4 @@
-package com.example.security.webauthn.yubico;
+package com.example.security.fido.yubico;
 
 import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RelyingParty;

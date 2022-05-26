@@ -1,8 +1,8 @@
 package com.example.security.config;
 
-import com.example.security.webauthn.login.FidoAuthenticationConverter;
-import com.example.security.webauthn.login.FidoAuthenticationManager;
-import com.example.security.webauthn.login.FidoLoginSuccessHandler;
+import com.example.security.fido.login.FidoAuthenticationConverter;
+import com.example.security.fido.login.FidoAuthenticationManager;
+import com.example.security.fido.login.FidoLoginSuccessHandler;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

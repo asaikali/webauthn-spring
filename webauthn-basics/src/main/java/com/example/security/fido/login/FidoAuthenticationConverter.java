@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 import com.example.json.JsonUtils;
 import javax.servlet.http.HttpServletRequest;

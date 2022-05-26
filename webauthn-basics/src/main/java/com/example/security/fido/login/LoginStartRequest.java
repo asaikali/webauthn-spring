@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 class LoginStartRequest {
   private String email;

@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 import com.yubico.webauthn.data.AuthenticatorAssertionResponse;
 import com.yubico.webauthn.data.ClientAssertionExtensionOutputs;

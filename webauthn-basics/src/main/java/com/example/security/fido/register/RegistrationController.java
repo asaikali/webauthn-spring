@@ -1,4 +1,4 @@
-package com.example.security.webauthn.register;
+package com.example.security.fido.register;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yubico.webauthn.exception.RegistrationFailedException;

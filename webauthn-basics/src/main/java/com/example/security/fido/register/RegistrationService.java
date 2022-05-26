@@ -1,10 +1,10 @@
-package com.example.security.webauthn.register;
+package com.example.security.fido.register;
 
 import com.example.json.JsonUtils;
 import com.example.security.user.FidoCredential;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
-import com.example.security.webauthn.yubico.YubicoUtils;
+import com.example.security.fido.yubico.YubicoUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.yubico.webauthn.FinishRegistrationOptions;
 import com.yubico.webauthn.RegistrationResult;

@@ -1,4 +1,4 @@
-package com.example.security.webauthn.yubico;
+package com.example.security.fido.yubico;
 
 import com.yubico.webauthn.data.ByteArray;
 import java.nio.ByteBuffer;

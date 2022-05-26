@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 import java.io.IOException;
 import javax.servlet.FilterChain;

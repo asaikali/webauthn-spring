@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 import java.util.Set;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

@@ -1,4 +1,4 @@
-package com.example.security.webauthn.login;
+package com.example.security.fido.login;
 
 import com.yubico.webauthn.AssertionRequest;
 import java.util.UUID;

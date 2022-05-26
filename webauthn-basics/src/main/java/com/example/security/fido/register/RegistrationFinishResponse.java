@@ -1,4 +1,4 @@
-package com.example.security.webauthn.register;
+package com.example.security.fido.register;
 
 import java.util.UUID;
 
