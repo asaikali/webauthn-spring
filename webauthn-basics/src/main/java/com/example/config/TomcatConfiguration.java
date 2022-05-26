@@ -7,6 +7,12 @@ import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * WebAuthn / FIDO requires https for all communications with the backend, so we configure https via
+ * the spring boot application.yaml settings. This class adds a http tomcat connector and configures it
+ * so that if a request comments in on http it will be redirected to https.
+ *
+ */
 @Configuration
 public class TomcatConfiguration {
     @Value("${http.port}")
@@ -22,6 +28,9 @@ public class TomcatConfiguration {
         return tomcat;
     }
 
+    /**
+     * Setting the redirect port causes spring security / tomcat to know how to redirect http to https
+     */
     private Connector createStandardConnector() {
         Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
         connector.setPort(httpPort);

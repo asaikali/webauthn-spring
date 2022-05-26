@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Create a new Account</title>
-    <script src="js/base64/base64.js"></script>
+    <script src="/js/base64/base64.js"></script>
     <script src="/js/jquery/jquery-3.6.0.min.js"></script>
 
     <!-- CSRF header name and value to be used by froms on this page to talk to the server -->
@@ -25,7 +25,6 @@
         Submit
     </button>
 </form>
-
 
 <script>
 
@@ -59,7 +58,7 @@
         logRequest(formData)
         $.ajax({
             type: "POST",
-            url: "/users/register/start",
+            url: "/webauthn/register/start",
             data: JSON.stringify(formData),
             dataType: "json",
             contentType: "application/json",
@@ -132,7 +131,7 @@
 
         $.ajax({
             type: "POST",
-            url: "/users/register/finish",
+            url: "/webauthn/register/finish",
             data: JSON.stringify(finishRequest),
             dataType: "json",
             contentType: "application/json",
@@ -163,7 +162,6 @@
         $("body").append(p, pre)
     }
 
-
     function logRequest(data) {
         const response = JSON.stringify(data, null, 2);
         const p = $('<p>Request:</p>')
@@ -171,15 +169,12 @@
         $("body").append(p, pre)
     }
 
-
     function logResponse(data) {
         const response = JSON.stringify(data, null, 2);
         const p = $('<p>Response:</p>')
         const pre = $('<pre></pre>').text(response)
         $("body").append(p, pre)
     }
-
-
 </script>
 </body>
 </html>
