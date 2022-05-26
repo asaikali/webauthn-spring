@@ -22,7 +22,7 @@ class RegistrationController {
     this.registrationService = registrationService;
   }
 
-  @PostMapping("/users/register/start")
+  @PostMapping("/webauthn/register/start")
   RegistrationStartResponse startRegisteration(@RequestBody RegistrationStartRequest request, HttpSession session) throws JsonProcessingException {
     var response = this.registrationService.startRegistration(request);
     session.setAttribute(START_REG_REQUEST, response);
@@ -30,7 +30,7 @@ class RegistrationController {
     return response;
   }
 
-  @PostMapping("/users/register/finish")
+  @PostMapping("/webauthn/register/finish")
   RegistrationFinishResponse finishRegistration(@RequestBody RegistrationFinishRequest request, HttpSession session) throws RegistrationFailedException, JsonProcessingException {
     RegistrationStartResponse response = (RegistrationStartResponse) session.getAttribute(START_REG_REQUEST);
     if(response == null) {
