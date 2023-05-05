@@ -20,6 +20,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 /**
@@ -169,9 +170,9 @@ public class SecurityFilterChainConfig {
         // spring security does not block requests to the h2 console.
         //
         // WARNING: NEVER do this in production
-        http.csrf().ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**"));
+        http.csrf().ignoringRequestMatchers(PathRequest.toH2Console());
         http.headers().frameOptions().sameOrigin();
-        http.authorizeHttpRequests().requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll();
+        http.authorizeHttpRequests().requestMatchers(PathRequest.toH2Console()).permitAll();
 
         // requires all communications to be over tls since webauthn does not work if http is used
         http.requiresChannel().anyRequest().requiresSecure();
@@ -225,6 +226,7 @@ public class SecurityFilterChainConfig {
                 new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
         authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
         authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
+        authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
         http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // build the security filter chain and return it
