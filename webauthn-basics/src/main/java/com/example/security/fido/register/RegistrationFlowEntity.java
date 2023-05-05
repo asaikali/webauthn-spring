@@ -2,7 +2,7 @@ package com.example.security.fido.register;
 
 import com.example.json.JsonUtils;
 import java.util.UUID;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "webauthn_registration_flow")
