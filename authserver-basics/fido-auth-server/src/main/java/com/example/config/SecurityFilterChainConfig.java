@@ -6,15 +6,16 @@ import com.example.security.fido.login.FidoAuthenticationManager;
 import com.example.security.fido.login.FidoLoginSuccessHandler;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
@@ -84,6 +85,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
  * @see org.springframework.security.oauth2.server.authorization.config.ProviderSettings.Builder
  */
 @EnableWebSecurity
+@Configuration
 public class SecurityFilterChainConfig {
 
     /**
@@ -167,9 +169,9 @@ public class SecurityFilterChainConfig {
         // spring security does not block requests to the h2 console.
         //
         // WARNING: NEVER do this in production
-        http.csrf().ignoringAntMatchers("/h2-console/**");
+        http.csrf().ignoringRequestMatchers(new AntPathRequestMatcher("/h2-console/**"));
         http.headers().frameOptions().sameOrigin();
-        http.authorizeRequests().antMatchers("/h2-console/**").permitAll();
+        http.authorizeHttpRequests().requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll();
 
         // requires all communications to be over tls since webauthn does not work if http is used
         http.requiresChannel().anyRequest().requiresSecure();
@@ -190,10 +192,10 @@ public class SecurityFilterChainConfig {
 
 
         // configure url authorization rules
-        http.authorizeRequests(
+        http.authorizeHttpRequests(
                 authorizeRequests ->
                         authorizeRequests
-                                .mvcMatchers(
+                                .requestMatchers(
                                         "/",
                                         "/register",
                                         "/webauthn/login/start",

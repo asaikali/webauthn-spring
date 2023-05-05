@@ -1,6 +1,7 @@
 package com.example.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -10,20 +11,21 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
 @EnableWebSecurity
+@Configuration
 public class ResourceServerConfig {
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         // configure the required scope for the /random-quote url
-        http.authorizeRequests()
-                .mvcMatchers("/random-quote").access("hasAuthority('SCOPE_quotes.read')")
-                .anyRequest().authenticated();
+        http.authorizeHttpRequests()
+                .requestMatchers("/random-quote").hasAuthority("SCOPE_quotes.read")
+                        .anyRequest().authenticated();
 
         // step cross-origin requests so that the angular public client can call this service
         http.cors();
 
-        // configure the resource servec to expect access tokens that are JWTs
+        // configure the resource server to expect access tokens that are JWTs
         // JWT can be validated locally without having to make a call to the
         // authorization server.
         http.oauth2ResourceServer().jwt();
@@ -39,6 +41,7 @@ public class ResourceServerConfig {
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         config.addAllowedOrigin("http://127.0.0.1:4200");
+        config.addAllowedOrigin("http://localhost:4200");
         config.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", config);
         return source;

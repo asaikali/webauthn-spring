@@ -27,7 +27,7 @@ spring:
           demoAuthServer:
             provider: spring
             client-id: "uppercase-quotes-opaque"
-            client-secret: "abc123"
+            client-secret: "uppercase-quotes-opaque"
             authorization-grant-type: client_credentials
             scope: "openid,quotes.read"
         provider:

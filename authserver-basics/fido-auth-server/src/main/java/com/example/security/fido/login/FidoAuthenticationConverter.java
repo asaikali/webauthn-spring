@@ -1,12 +1,12 @@
 package com.example.security.fido.login;
 
 import com.example.json.JsonUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 
-import javax.servlet.http.HttpServletRequest;
 
 public class FidoAuthenticationConverter implements AuthenticationConverter {
   @Override

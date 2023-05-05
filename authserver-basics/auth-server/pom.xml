@@ -8,7 +8,6 @@
     <artifactId>authserver-basics</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <groupId>com.example</groupId>
   <artifactId>auth-server</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>auth-server</name>
@@ -17,7 +16,7 @@
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-oauth2-authorization-server</artifactId>
-      <version>0.2.3</version>
+      <version>1.0.2</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

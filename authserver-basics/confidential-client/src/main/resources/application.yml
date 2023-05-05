@@ -14,7 +14,7 @@ server:
 
 logging:
   level:
-    org.springframework.security: trace
+    org.springframework.security: info
 
 spring:
   security:

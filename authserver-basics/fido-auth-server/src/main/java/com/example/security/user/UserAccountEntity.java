@@ -1,8 +1,8 @@
 package com.example.security.user;
 
+import jakarta.persistence.*;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
 import java.util.Set;
 import java.util.UUID;
 

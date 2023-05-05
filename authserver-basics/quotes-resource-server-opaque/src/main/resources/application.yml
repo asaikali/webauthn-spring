@@ -18,7 +18,7 @@ spring:
       resourceserver:
         opaquetoken:
           client-id: "quotes-resource-server-opaque"
-          client-secret: "abc123"
+          client-secret: "quotes-resource-server-opaque"
           introspection-uri: http://localhost:9090/oauth2/introspect
 logging:
   level:
