@@ -25,9 +25,10 @@ Now that you have an idea of what the WebAuthn and FIDO2 do lets explore the dem
 
 * Import the project into your IDE 
 * Run the `WebAuthnBasicsApplication` 
-* go to `https://localhost:8080` WebAuthn requires https so there is a self-signed certificate in this project. If you hare having trouble with chrome
-not accepting the certificate then you should type `thisisunsafe` and it will let you through.
-see [stackoverflow question](https://stackoverflow.com/a/31900210/438319) for more options
+* go to [http://localhost:8080](http://localhost:8080) WebAuthn requires https you will be redirected to
+  [https://localhost:8443](https://localhost:8433) using a self-signed certificate in this project. 
+  If you hare having trouble with chrome  not accepting the certificate then you should type `thisisunsafe` 
+  and it will let you through. see [stackoverflow question](https://stackoverflow.com/a/31900210/438319) for more options
 
 ## Use the application 
 
@@ -39,6 +40,13 @@ will be able to see the JSON exchanged between the server and browser.
 * Go back to the home page and try to access the quotes link you will be redirect to the login page
 * follow the promotes and login without a password 
 
+## Explore the Application Database
+
+This demo app uses h2 to store all the registration you can explore the database by going to 
+[https://localhost:8443/h2-console](https://localhost:8443/h2-console) you can connect with the 
+default username sa and empty password, just hit the connect button and you will be able to 
+browse all the database tables. if you put breakpoints in the application you can explore
+what gets stored at different stages of the registration process.
 
 ## Explore the registration code 
 
