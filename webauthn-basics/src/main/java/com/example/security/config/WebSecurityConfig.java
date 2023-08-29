@@ -12,7 +12,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 /**
  * This class uses the Lambda style DSL see the following blog posts for more info
@@ -24,9 +26,17 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+  /*
+   * see https://github.com/jzheaux/cve-2023-34035-mitigations/tree/main#mitigations
+   */
+  @Bean
+  MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
+    return new MvcRequestMatcher.Builder(introspector);
+  }
+
   @Bean
   SecurityFilterChain defaultSecurityFilterChain(
-      HttpSecurity http, FidoAuthenticationManager fidoAuthenticationManager) throws Exception {
+      HttpSecurity http, FidoAuthenticationManager fidoAuthenticationManager,MvcRequestMatcher.Builder mvc) throws Exception {
 
     // for education purposes we turn on the h2-console so we need to make sure that
     // spring security does not block requests to the h2 console.
@@ -41,14 +51,14 @@ public class WebSecurityConfig {
 
     // configure url authorization rules
     http.authorizeHttpRequests().requestMatchers(
-                    "/",
-                    "/register",
-                    "/webauthn/login/start",
-                    "/webauthn/login/finish",
-                    "/webauthn/register/start",
-                    "/webauthn/register/finish",
-                    "/webauthn/login",
-                    "favicon.ico")
+                    mvc.pattern("/"),
+                    mvc.pattern("/register"),
+                    mvc.pattern("/webauthn/login/start"),
+                    mvc.pattern("/webauthn/login/finish"),
+                    mvc.pattern("/webauthn/register/start"),
+                    mvc.pattern("/webauthn/register/finish"),
+                    mvc.pattern("/webauthn/login"),
+                    mvc.pattern("favicon.ico"))
                 .permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()

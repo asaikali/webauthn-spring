@@ -23,7 +23,9 @@ class UserAccountEntity {
   @Column(name = "email")
   private String email;
 
-  @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  // see https://hibernate.atlassian.net/browse/HHH-16593
+  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+  @JoinColumn(name = "user_id")
   private Set<FidoCredentialEntity> credentials = Set.of();
 
   public Set<FidoCredentialEntity> getCredentials() {
