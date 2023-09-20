@@ -18,13 +18,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class RegistrationService {
+public class RegistrationService {
 
   private final UserService userService;
   private final RelyingParty relyingParty;
   private final RegistrationFlowRepository registrationFlowRepository;
 
-  RegistrationService(
+  public RegistrationService(
       RelyingParty relyingParty,
       UserService userService,
       RegistrationFlowRepository registrationFlowRepository) {

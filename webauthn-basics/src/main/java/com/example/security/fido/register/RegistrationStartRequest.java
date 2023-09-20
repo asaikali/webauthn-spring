@@ -1,6 +1,6 @@
 package com.example.security.fido.register;
 
-class RegistrationStartRequest {
+public class RegistrationStartRequest {
   private String fullName;
   private String email;
 

@@ -1,6 +1,6 @@
 package com.example.security.fido.login;
 
-class LoginStartRequest {
+public class LoginStartRequest {
   private String email;
 
   public String getEmail() {

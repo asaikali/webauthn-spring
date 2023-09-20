@@ -6,7 +6,7 @@ import com.yubico.webauthn.data.PublicKeyCredentialCreationOptions;
 import java.util.UUID;
 
 @JsonInclude(Include.NON_NULL)
-class RegistrationStartResponse {
+public class RegistrationStartResponse {
   private UUID flowId;
   private PublicKeyCredentialCreationOptions credentialCreationOptions;
 

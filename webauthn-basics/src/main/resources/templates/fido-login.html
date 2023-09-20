@@ -120,7 +120,7 @@
         logJson("form post to spring login endpoint", loginRequest)
         $.ajax({
             type: "POST",
-            url: "/fido/login",
+            url: "/webauthn/login/finish",
             data: loginRequest,
             dataType: "json",
             beforeSend: function (xhr) {

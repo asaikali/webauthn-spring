@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-class LoginService {
+public class LoginService {
 
   private final RelyingParty relyingParty;
   private final LoginFlowRepository loginFlowRepository;

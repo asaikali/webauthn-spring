@@ -3,6 +3,7 @@ package com.example.security.config;
 import com.example.security.fido.login.FidoAuthenticationConverter;
 import com.example.security.fido.login.FidoAuthenticationManager;
 import com.example.security.fido.login.FidoLoginSuccessHandler;
+
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.webauthn.rp.config.annotation.web.configurers.WebAuthnRelyingPartyConfigurer;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 /**
@@ -53,10 +55,6 @@ public class WebSecurityConfig {
     http.authorizeHttpRequests().requestMatchers(
                     mvc.pattern("/"),
                     mvc.pattern("/register"),
-                    mvc.pattern("/webauthn/login/start"),
-                    mvc.pattern("/webauthn/login/finish"),
-                    mvc.pattern("/webauthn/register/start"),
-                    mvc.pattern("/webauthn/register/finish"),
                     mvc.pattern("/webauthn/login"),
                     mvc.pattern("favicon.ico"))
                 .permitAll()
@@ -90,6 +88,8 @@ public class WebSecurityConfig {
     authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
     authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
     http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    http.apply(new WebAuthnRelyingPartyConfigurer());
 
     return http.build();
   }
