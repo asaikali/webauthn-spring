@@ -1,20 +1,12 @@
 package com.example.security.config;
 
-import com.example.security.fido.login.FidoAuthenticationConverter;
-import com.example.security.fido.login.FidoAuthenticationManager;
-import com.example.security.fido.login.FidoLoginSuccessHandler;
-
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFilter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.webauthn.rp.config.annotation.web.configurers.WebAuthnRelyingPartyConfigurer;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
@@ -38,7 +30,7 @@ public class WebSecurityConfig {
 
   @Bean
   SecurityFilterChain defaultSecurityFilterChain(
-      HttpSecurity http, FidoAuthenticationManager fidoAuthenticationManager,MvcRequestMatcher.Builder mvc) throws Exception {
+      HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
 
     // for education purposes we turn on the h2-console so we need to make sure that
     // spring security does not block requests to the h2 console.
@@ -82,12 +74,12 @@ public class WebSecurityConfig {
 
     // http.securityContext().requireExplicitSave(false);
 
-    var authenticationFilter =
-        new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
-    authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
-    authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
-    authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
-    http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+//    var authenticationFilter =
+//        new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
+//    authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
+//    authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
+//    authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
+//    http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     http.apply(new WebAuthnRelyingPartyConfigurer());
 
