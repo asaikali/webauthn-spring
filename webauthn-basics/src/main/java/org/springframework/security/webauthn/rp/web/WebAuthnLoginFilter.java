@@ -26,10 +26,13 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -54,6 +57,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
     );
     private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendLoginResponse;
     private final AuthenticationFailureHandler authenticationFailureHandler = this::sendErrorResponse;
+    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     public WebAuthnLoginFilter(AuthenticationManager authenticationManager) {
         Assert.notNull(authenticationManager, "authenticationManager cannot be null");
@@ -122,6 +126,12 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
         session.removeAttribute(START_LOGIN_REQUEST);
         if (assertionResult.isSuccess()) {
             session.setAttribute(AssertionRequest.class.getName(), assertionResult);
+
+            // FIXME Save another type of Authentication, e.g. Fido2Authentication
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+            securityContext.setAuthentication(authenticatorAssertionAuthentication);
+            SecurityContextHolder.setContext(securityContext);
+            this.securityContextRepository.saveContext(securityContext, request, response);
         }
 
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
