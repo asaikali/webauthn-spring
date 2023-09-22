@@ -15,7 +15,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import org.springframework.security.webauthn.rp.authentication.WebAuthnLoginAuthenticationProvider;
-import org.springframework.security.webauthn.rp.authentication.WebAuthnRegistrationAuthenticationProvider;
 import org.springframework.security.webauthn.rp.web.WebAuthnLoginFilter;
 import org.springframework.security.webauthn.rp.web.WebAuthnRegistrationFilter;
 import org.springframework.util.StringUtils;
@@ -24,11 +23,6 @@ public final class WebAuthnRelyingPartyConfigurer extends AbstractHttpConfigurer
 
     @Override
     public void init(HttpSecurity httpSecurity) throws Exception {
-        RegistrationService registrationService = getBean(httpSecurity, RegistrationService.class);
-        WebAuthnRegistrationAuthenticationProvider registrationAuthenticationProvider =
-                new WebAuthnRegistrationAuthenticationProvider(registrationService);
-        httpSecurity.authenticationProvider(registrationAuthenticationProvider);
-
         LoginService loginService = getBean(httpSecurity, LoginService.class);
         WebAuthnLoginAuthenticationProvider loginAuthenticationProvider =
                 new WebAuthnLoginAuthenticationProvider(loginService);
@@ -37,11 +31,11 @@ public final class WebAuthnRelyingPartyConfigurer extends AbstractHttpConfigurer
 
     @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
-        AuthenticationManager authenticationManager = httpSecurity.getSharedObject(AuthenticationManager.class);
-
-        WebAuthnRegistrationFilter registrationFilter = new WebAuthnRegistrationFilter(authenticationManager);
+        RegistrationService registrationService = getBean(httpSecurity, RegistrationService.class);
+        WebAuthnRegistrationFilter registrationFilter = new WebAuthnRegistrationFilter(registrationService);
         httpSecurity.addFilterBefore(postProcess(registrationFilter), AbstractPreAuthenticatedProcessingFilter.class);
 
+        AuthenticationManager authenticationManager = httpSecurity.getSharedObject(AuthenticationManager.class);
         WebAuthnLoginFilter loginFilter = new WebAuthnLoginFilter(authenticationManager);
         httpSecurity.addFilterAfter(postProcess(loginFilter), AbstractPreAuthenticatedProcessingFilter.class);
     }

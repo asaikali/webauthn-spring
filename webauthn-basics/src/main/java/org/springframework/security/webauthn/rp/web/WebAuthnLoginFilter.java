@@ -36,7 +36,7 @@ import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
-import org.springframework.security.webauthn.rp.authentication.WebAuthnAuthenticationException;
+import org.springframework.security.webauthn.rp.WebAuthnException;
 import org.springframework.security.webauthn.rp.authentication.WebAuthnAuthenticatorAssertionAuthenticationToken;
 import org.springframework.security.webauthn.rp.authentication.WebAuthnCredentialRequestAuthenticationToken;
 import org.springframework.util.Assert;
@@ -81,7 +81,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
             Authentication loginAuthentication = this.authenticationConverter.convert(request);
             Authentication loginAuthenticationResult = this.authenticationManager.authenticate(loginAuthentication);
             this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, loginAuthenticationResult);
-        } catch (WebAuthnAuthenticationException ex) {
+        } catch (AuthenticationException ex) {
             SecurityContextHolder.clearContext();
             if (this.logger.isTraceEnabled()) {
                 this.logger.trace(LogMessage.format("WebAuthn Login request failed: %s", ex.getMessage()), ex);
@@ -158,7 +158,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
             try {
                 loginStartRequest = (LoginStartRequest) jsonMessageConverter.read(LoginStartRequest.class, null, httpRequest);
             } catch (IOException ex) {
-                throw new WebAuthnAuthenticationException("WebAuthn Login start request conversion failed.", ex);
+                throw new WebAuthnException("WebAuthn Login start request conversion failed.", ex);
             }
 
             return new WebAuthnCredentialRequestAuthenticationToken(loginStartRequest);
@@ -176,7 +176,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
 
             AssertionRequest assertionRequest = (AssertionRequest) request.getSession().getAttribute(START_LOGIN_REQUEST);
             if (assertionRequest == null) {
-                throw new WebAuthnAuthenticationException("WebAuthn Login start request not found.");
+                throw new WebAuthnException("WebAuthn Login start request not found.");
             }
 
             String username = request.getParameter("username");

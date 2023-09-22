@@ -7,6 +7,7 @@ import com.yubico.webauthn.AssertionResult;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.webauthn.rp.WebAuthnException;
 import org.springframework.util.Assert;
 
 public final class WebAuthnLoginAuthenticationProvider implements AuthenticationProvider {
@@ -32,7 +33,7 @@ public final class WebAuthnLoginAuthenticationProvider implements Authentication
         try {
             loginStartResponse = this.loginService.startLogin(credentialRequestAuthentication.getLoginStartRequest());
         } catch (Exception ex) {
-            throw new WebAuthnAuthenticationException("Failed to start WebAuthn login.", ex);
+            throw new WebAuthnException("Failed to start WebAuthn login.", ex);
         }
 
         return new WebAuthnCredentialRequestAuthenticationToken(loginStartResponse);
@@ -46,7 +47,7 @@ public final class WebAuthnLoginAuthenticationProvider implements Authentication
         try {
             assertionResult = this.loginService.finishLogin(authenticatorAssertionAuthentication.getLoginFinishRequest());
         } catch (Exception ex) {
-            throw new WebAuthnAuthenticationException("Failed to finish WebAuthn login.", ex);
+            throw new WebAuthnException("Failed to finish WebAuthn login.", ex);
         }
 
         return new WebAuthnAuthenticatorAssertionAuthenticationToken(assertionResult);

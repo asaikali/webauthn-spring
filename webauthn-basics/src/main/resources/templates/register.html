@@ -58,7 +58,7 @@
         logRequest(formData)
         $.ajax({
             type: "POST",
-            url: "/webauthn/register/start",
+            url: "/webauthn/register",
             data: JSON.stringify(formData),
             dataType: "json",
             contentType: "application/json",
