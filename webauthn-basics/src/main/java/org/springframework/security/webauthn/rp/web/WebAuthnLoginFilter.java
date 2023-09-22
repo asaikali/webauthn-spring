@@ -2,6 +2,9 @@ package org.springframework.security.webauthn.rp.web;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,24 +13,22 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import com.example.json.JsonUtils;
-import com.example.security.fido.login.LoginFinishRequest;
-import com.example.security.fido.login.LoginStartRequest;
-import com.example.security.fido.login.LoginStartResponse;
 import com.yubico.webauthn.AssertionRequest;
 import com.yubico.webauthn.AssertionResult;
 
-import org.springframework.core.log.LogMessage;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.GenericHttpMessageConverter;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -37,15 +38,18 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.webauthn.rp.WebAuthnException;
-import org.springframework.security.webauthn.rp.authentication.WebAuthnAuthenticatorAssertionAuthenticationToken;
-import org.springframework.security.webauthn.rp.authentication.WebAuthnCredentialRequestAuthenticationToken;
+import org.springframework.security.webauthn.rp.authentication.WebAuthnAssertionRequestAuthenticationToken;
+import org.springframework.security.webauthn.rp.authentication.WebAuthnAssertionResponseAuthenticationToken;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionCreateRequest;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionRequest;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionResponse;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 public final class WebAuthnLoginFilter extends OncePerRequestFilter {
-    private static final String DEFAULT_LOGIN_START_ENDPOINT_URI = "/webauthn/login/start";
+    private static final String DEFAULT_LOGIN_START_ENDPOINT_URI = "/webauthn/login";
     private static final String DEFAULT_LOGIN_FINISH_ENDPOINT_URI = "/webauthn/login/finish";
-    private static final String START_LOGIN_REQUEST = "start_login_request";
+    private static final String ASSERTION_REQUEST_ATTRIBUTE = "ASSERTION_REQUEST";
     private static final GenericHttpMessageConverter<Object> jsonMessageConverter = HttpMessageConverters.getJsonMessageConverter();
     private final AuthenticationManager authenticationManager;
     private final RequestMatcher loginEndpointMatcher;
@@ -58,6 +62,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
     private final AuthenticationSuccessHandler authenticationSuccessHandler = this::sendLoginResponse;
     private final AuthenticationFailureHandler authenticationFailureHandler = this::sendErrorResponse;
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
+    private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
 
     public WebAuthnLoginFilter(AuthenticationManager authenticationManager) {
         Assert.notNull(authenticationManager, "authenticationManager cannot be null");
@@ -82,18 +87,17 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
             Authentication loginAuthenticationResult = this.authenticationManager.authenticate(loginAuthentication);
             this.authenticationSuccessHandler.onAuthenticationSuccess(request, response, loginAuthenticationResult);
         } catch (AuthenticationException ex) {
-            SecurityContextHolder.clearContext();
+            this.securityContextHolderStrategy.clearContext();
             if (this.logger.isTraceEnabled()) {
-                this.logger.trace(LogMessage.format("WebAuthn Login request failed: %s", ex.getMessage()), ex);
+                this.logger.trace("Failed on WebAuthn login request.", ex);
             }
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }
-
     }
 
     private void sendLoginResponse(HttpServletRequest request, HttpServletResponse response,
                                    Authentication authentication) throws IOException {
-        if (authentication instanceof WebAuthnCredentialRequestAuthenticationToken) {
+        if (authentication instanceof WebAuthnAssertionRequestAuthenticationToken) {
             sendLoginStartResponse(request, response, authentication);
         } else {
             sendLoginFinishResponse(request, response, authentication);
@@ -102,45 +106,44 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
 
     private void sendLoginStartResponse(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        WebAuthnCredentialRequestAuthenticationToken credentialRequestAuthentication =
-                (WebAuthnCredentialRequestAuthenticationToken) authentication;
+        WebAuthnAssertionRequestAuthenticationToken assertionRequestAuthentication =
+                (WebAuthnAssertionRequestAuthenticationToken) authentication;
 
-        LoginStartResponse loginStartResponse = credentialRequestAuthentication.getLoginStartResponse();
+        WebAuthnAssertionRequest assertionRequest = assertionRequestAuthentication.getAssertionRequest();
 
         HttpSession session = request.getSession();
-        session.setAttribute(START_LOGIN_REQUEST, loginStartResponse.getAssertionRequest());
+        session.setAttribute(ASSERTION_REQUEST_ATTRIBUTE, assertionRequest.getAssertionRequest());
 
-        ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
-        jsonMessageConverter.write(loginStartResponse, LoginStartResponse.class,
-                MediaType.APPLICATION_JSON, httpResponse);
+        jsonMessageConverter.write(assertionRequest, WebAuthnAssertionRequest.class,
+                MediaType.APPLICATION_JSON, new ServletServerHttpResponse(response));
     }
 
     private void sendLoginFinishResponse(HttpServletRequest request, HttpServletResponse response,
                                          Authentication authentication) throws IOException {
-        WebAuthnAuthenticatorAssertionAuthenticationToken authenticatorAssertionAuthentication =
-                (WebAuthnAuthenticatorAssertionAuthenticationToken) authentication;
+        WebAuthnAssertionResponseAuthenticationToken assertionResponseAuthentication =
+                (WebAuthnAssertionResponseAuthenticationToken) authentication;
 
-        AssertionResult assertionResult = authenticatorAssertionAuthentication.getAssertionResult();
+        AssertionResult assertionResult = assertionResponseAuthentication.getAssertionResult();
 
         HttpSession session = request.getSession();
-        session.removeAttribute(START_LOGIN_REQUEST);
-        if (assertionResult.isSuccess()) {
-            session.setAttribute(AssertionRequest.class.getName(), assertionResult);
+        session.removeAttribute(ASSERTION_REQUEST_ATTRIBUTE);
 
-            // FIXME Save another type of Authentication, e.g. Fido2Authentication
-            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-            securityContext.setAuthentication(authenticatorAssertionAuthentication);
-            SecurityContextHolder.setContext(securityContext);
+        if (assertionResult.isSuccess()) {
+            SecurityContext securityContext = this.securityContextHolderStrategy.createEmptyContext();
+            securityContext.setAuthentication(assertionResponseAuthentication);
+            this.securityContextHolderStrategy.setContext(securityContext);
             this.securityContextRepository.saveContext(securityContext, request, response);
         }
 
-        ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
         jsonMessageConverter.write(assertionResult, AssertionResult.class,
-                MediaType.APPLICATION_JSON, httpResponse);
+                MediaType.APPLICATION_JSON, new ServletServerHttpResponse(response));
     }
 
     private void sendErrorResponse(HttpServletRequest request, HttpServletResponse response,
                                    AuthenticationException exception) throws IOException {
+        if (this.logger.isTraceEnabled()) {
+            this.logger.trace("Failed on WebAuthn login request.", exception);
+        }
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 
@@ -152,16 +155,15 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            ServletServerHttpRequest httpRequest = new ServletServerHttpRequest(request);
-
-            LoginStartRequest loginStartRequest;
+            WebAuthnAssertionCreateRequest assertionCreateRequest;
             try {
-                loginStartRequest = (LoginStartRequest) jsonMessageConverter.read(LoginStartRequest.class, null, httpRequest);
+                assertionCreateRequest = (WebAuthnAssertionCreateRequest) jsonMessageConverter.read(
+                        WebAuthnAssertionCreateRequest.class, null, new ServletServerHttpRequest(request));
             } catch (IOException ex) {
-                throw new WebAuthnException("WebAuthn Login start request conversion failed.", ex);
+                throw new WebAuthnException("Malformed WebAuthn login start request.", ex);
             }
 
-            return new WebAuthnCredentialRequestAuthenticationToken(loginStartRequest);
+            return new WebAuthnAssertionRequestAuthenticationToken(assertionCreateRequest);
         }
 
     }
@@ -174,16 +176,39 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            AssertionRequest assertionRequest = (AssertionRequest) request.getSession().getAttribute(START_LOGIN_REQUEST);
+            AssertionRequest assertionRequest = (AssertionRequest) request.getSession().getAttribute(ASSERTION_REQUEST_ATTRIBUTE);
             if (assertionRequest == null) {
-                throw new WebAuthnException("WebAuthn Login start request not found.");
+                throw new WebAuthnException("WebAuthn login start request not found.");
             }
 
             String username = request.getParameter("username");
             String finishRequest = request.getParameter("finishRequest");
-            LoginFinishRequest loginFinishRequest = JsonUtils.fromJson(finishRequest, LoginFinishRequest.class);
+            WebAuthnAssertionResponse assertionResponse = JsonUtils.fromJson(finishRequest, WebAuthnAssertionResponse.class);
 
-            return new WebAuthnAuthenticatorAssertionAuthenticationToken(username, loginFinishRequest);
+            return new WebAuthnAssertionResponseAuthenticationToken(username, assertionResponse);
+        }
+
+    }
+
+    private static final class DelegatingAuthenticationConverter implements AuthenticationConverter {
+        private final List<AuthenticationConverter> converters;
+
+        private DelegatingAuthenticationConverter(List<AuthenticationConverter> converters) {
+            Assert.notEmpty(converters, "converters cannot be empty");
+            this.converters = Collections.unmodifiableList(new LinkedList<>(converters));
+        }
+
+        @Nullable
+        @Override
+        public Authentication convert(HttpServletRequest request) {
+            Assert.notNull(request, "request cannot be null");
+            for (AuthenticationConverter converter : this.converters) {
+                Authentication authentication = converter.convert(request);
+                if (authentication != null) {
+                    return authentication;
+                }
+            }
+            return null;
         }
 
     }

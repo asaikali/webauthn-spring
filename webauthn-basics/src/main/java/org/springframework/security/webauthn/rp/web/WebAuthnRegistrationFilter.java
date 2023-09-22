@@ -28,7 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public final class WebAuthnRegistrationFilter extends OncePerRequestFilter {
     private static final String DEFAULT_REGISTRATION_START_ENDPOINT_URI = "/webauthn/register";
     private static final String DEFAULT_REGISTRATION_FINISH_ENDPOINT_URI = "/webauthn/register/finish";
-    private static final String REGISTRATION_REQUEST_ATTRIBUTE = "start_reg_request";
+    private static final String REGISTRATION_REQUEST_ATTRIBUTE = "REGISTRATION_REQUEST";
     private static final GenericHttpMessageConverter<Object> jsonMessageConverter = HttpMessageConverters.getJsonMessageConverter();
     private final RegistrationService registrationService;
     private final RequestMatcher registrationStartEndpointMatcher;

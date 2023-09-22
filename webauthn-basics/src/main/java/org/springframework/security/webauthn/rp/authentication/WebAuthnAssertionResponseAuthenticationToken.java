@@ -2,28 +2,28 @@ package org.springframework.security.webauthn.rp.authentication;
 
 import java.util.Collections;
 
-import com.example.security.fido.login.LoginFinishRequest;
 import com.yubico.webauthn.AssertionResult;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionResponse;
 
-public class WebAuthnAuthenticatorAssertionAuthenticationToken extends AbstractAuthenticationToken {
+public class WebAuthnAssertionResponseAuthenticationToken extends AbstractAuthenticationToken {
     private final String userName;
-    private final LoginFinishRequest loginFinishRequest;
+    private final WebAuthnAssertionResponse assertionResponse;
     private final AssertionResult assertionResult;
 
-    public WebAuthnAuthenticatorAssertionAuthenticationToken(String userName, LoginFinishRequest loginFinishRequest) {
+    public WebAuthnAssertionResponseAuthenticationToken(String userName, WebAuthnAssertionResponse assertionResponse) {
         super(Collections.emptyList());
         this.userName = userName;
-        this.loginFinishRequest = loginFinishRequest;
+        this.assertionResponse = assertionResponse;
         this.assertionResult = null;
     }
 
-    public WebAuthnAuthenticatorAssertionAuthenticationToken(AssertionResult assertionResult) {
+    public WebAuthnAssertionResponseAuthenticationToken(AssertionResult assertionResult) {
         super(Collections.emptyList());
         this.assertionResult = assertionResult;
         this.userName = null;
-        this.loginFinishRequest = null;
+        this.assertionResponse = null;
         setAuthenticated(true);
     }
 
@@ -41,8 +41,8 @@ public class WebAuthnAuthenticatorAssertionAuthenticationToken extends AbstractA
         return this.userName;
     }
 
-    public LoginFinishRequest getLoginFinishRequest() {
-        return this.loginFinishRequest;
+    public WebAuthnAssertionResponse getAssertionResponse() {
+        return this.assertionResponse;
     }
 
     public AssertionResult getAssertionResult() {

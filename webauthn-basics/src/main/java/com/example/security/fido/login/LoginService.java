@@ -1,17 +1,26 @@
 package com.example.security.fido.login;
 
-import static com.example.json.JsonUtils.toJson;
+import java.util.UUID;
 
 import com.example.json.JsonUtils;
 import com.example.security.user.UserAccount;
 import com.example.security.user.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.yubico.webauthn.*;
+import com.yubico.webauthn.AssertionRequest;
+import com.yubico.webauthn.AssertionResult;
+import com.yubico.webauthn.FinishAssertionOptions;
+import com.yubico.webauthn.RelyingParty;
+import com.yubico.webauthn.StartAssertionOptions;
 import com.yubico.webauthn.exception.AssertionFailedException;
-import java.util.UUID;
+
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionCreateRequest;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionRequest;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.example.json.JsonUtils.toJson;
 
 @Service
 public class LoginService {
@@ -36,7 +45,7 @@ public class LoginService {
    * @throws AssertionFailedException
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public AssertionResult finishLogin(LoginFinishRequest loginFinishRequest)
+  public AssertionResult finishLogin(WebAuthnAssertionResponse loginFinishRequest)
       throws AssertionFailedException {
 
     var loginFlowEntity =
@@ -80,7 +89,7 @@ public class LoginService {
    * @return configuration for the browser to use to interact with the FIDO2 authenticator using WebAuthn browser API
    */
   @Transactional(propagation = Propagation.REQUIRED)
-  public LoginStartResponse startLogin(LoginStartRequest loginStartRequest) {
+  public WebAuthnAssertionRequest startLogin(WebAuthnAssertionCreateRequest loginStartRequest) {
 
     // Find the user in the user database
     UserAccount user =
@@ -97,7 +106,7 @@ public class LoginService {
             .build();
     AssertionRequest assertionRequest = this.relyingParty.startAssertion(options);
 
-    LoginStartResponse loginStartResponse = new LoginStartResponse();
+    WebAuthnAssertionRequest loginStartResponse = new WebAuthnAssertionRequest();
     loginStartResponse.setFlowId(UUID.randomUUID());
     loginStartResponse.setAssertionRequest(assertionRequest);
 
