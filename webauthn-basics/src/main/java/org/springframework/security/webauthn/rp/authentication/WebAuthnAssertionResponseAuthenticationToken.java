@@ -5,16 +5,21 @@ import java.util.Collections;
 import com.yubico.webauthn.AssertionResult;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionRequest;
 import org.springframework.security.webauthn.rp.data.WebAuthnAssertionResponse;
 
 public class WebAuthnAssertionResponseAuthenticationToken extends AbstractAuthenticationToken {
     private final String userName;
+    private final WebAuthnAssertionRequest assertionRequest;
     private final WebAuthnAssertionResponse assertionResponse;
     private final AssertionResult assertionResult;
 
-    public WebAuthnAssertionResponseAuthenticationToken(String userName, WebAuthnAssertionResponse assertionResponse) {
+    public WebAuthnAssertionResponseAuthenticationToken(String userName,
+                                                        WebAuthnAssertionRequest assertionRequest,
+                                                        WebAuthnAssertionResponse assertionResponse) {
         super(Collections.emptyList());
         this.userName = userName;
+        this.assertionRequest = assertionRequest;
         this.assertionResponse = assertionResponse;
         this.assertionResult = null;
     }
@@ -23,6 +28,7 @@ public class WebAuthnAssertionResponseAuthenticationToken extends AbstractAuthen
         super(Collections.emptyList());
         this.assertionResult = assertionResult;
         this.userName = null;
+        this.assertionRequest = null;
         this.assertionResponse = null;
         setAuthenticated(true);
     }
@@ -39,6 +45,10 @@ public class WebAuthnAssertionResponseAuthenticationToken extends AbstractAuthen
 
     public String getUserName() {
         return this.userName;
+    }
+
+    public WebAuthnAssertionRequest getAssertionRequest() {
+        return this.assertionRequest;
     }
 
     public WebAuthnAssertionResponse getAssertionResponse() {

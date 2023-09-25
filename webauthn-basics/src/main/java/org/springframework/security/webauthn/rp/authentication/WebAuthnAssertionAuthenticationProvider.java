@@ -1,21 +1,20 @@
 package org.springframework.security.webauthn.rp.authentication;
 
-import com.example.security.fido.login.LoginService;
-import com.yubico.webauthn.AssertionResult;
-
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.webauthn.rp.WebAuthnAssertionService;
 import org.springframework.security.webauthn.rp.WebAuthnException;
 import org.springframework.security.webauthn.rp.data.WebAuthnAssertionRequest;
+import org.springframework.security.webauthn.rp.data.WebAuthnAssertionSuccessResponse;
 import org.springframework.util.Assert;
 
-public final class WebAuthnLoginAuthenticationProvider implements AuthenticationProvider {
-    private final LoginService loginService;
+public final class WebAuthnAssertionAuthenticationProvider implements AuthenticationProvider {
+    private final WebAuthnAssertionService assertionService;
 
-    public WebAuthnLoginAuthenticationProvider(LoginService loginService) {
-        Assert.notNull(loginService, "loginService cannot be null");
-        this.loginService = loginService;
+    public WebAuthnAssertionAuthenticationProvider(WebAuthnAssertionService assertionService) {
+        Assert.notNull(assertionService, "assertionService cannot be null");
+        this.assertionService = assertionService;
     }
 
     @Override
@@ -31,7 +30,7 @@ public final class WebAuthnLoginAuthenticationProvider implements Authentication
 
         WebAuthnAssertionRequest assertionRequest;
         try {
-            assertionRequest = this.loginService.startLogin(assertionRequestAuthentication.getAssertionCreateRequest());
+            assertionRequest = this.assertionService.startAssertion(assertionRequestAuthentication.getAssertionCreateRequest());
         } catch (Exception ex) {
             throw new WebAuthnException("Failed to authenticate WebAuthn assertion request.", ex);
         }
@@ -43,14 +42,15 @@ public final class WebAuthnLoginAuthenticationProvider implements Authentication
         WebAuthnAssertionResponseAuthenticationToken assertionResponseAuthentication =
                 (WebAuthnAssertionResponseAuthenticationToken) authentication;
 
-        AssertionResult assertionResult;
+        WebAuthnAssertionSuccessResponse assertionSuccessResponse;
         try {
-            assertionResult = this.loginService.finishLogin(assertionResponseAuthentication.getAssertionResponse());
+            assertionSuccessResponse = this.assertionService.finishAssertion(assertionResponseAuthentication.getAssertionRequest(),
+                    assertionResponseAuthentication.getAssertionResponse());
         } catch (Exception ex) {
             throw new WebAuthnException("Failed to authenticate WebAuthn assertion response.", ex);
         }
 
-        return new WebAuthnAssertionResponseAuthenticationToken(assertionResult);
+        return new WebAuthnAssertionResponseAuthenticationToken(assertionSuccessResponse.getAssertionResult());
     }
 
     @Override

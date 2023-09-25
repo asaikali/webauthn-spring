@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import com.example.json.JsonUtils;
-import com.yubico.webauthn.AssertionRequest;
 import com.yubico.webauthn.AssertionResult;
 
 import org.springframework.http.HttpMethod;
@@ -112,7 +111,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
         WebAuthnAssertionRequest assertionRequest = assertionRequestAuthentication.getAssertionRequest();
 
         HttpSession session = request.getSession();
-        session.setAttribute(ASSERTION_REQUEST_ATTRIBUTE, assertionRequest.getAssertionRequest());
+        session.setAttribute(ASSERTION_REQUEST_ATTRIBUTE, assertionRequest);
 
         jsonMessageConverter.write(assertionRequest, WebAuthnAssertionRequest.class,
                 MediaType.APPLICATION_JSON, new ServletServerHttpResponse(response));
@@ -176,7 +175,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
                 return null;
             }
 
-            AssertionRequest assertionRequest = (AssertionRequest) request.getSession().getAttribute(ASSERTION_REQUEST_ATTRIBUTE);
+            WebAuthnAssertionRequest assertionRequest = (WebAuthnAssertionRequest) request.getSession().getAttribute(ASSERTION_REQUEST_ATTRIBUTE);
             if (assertionRequest == null) {
                 throw new WebAuthnException("WebAuthn login start request not found.");
             }
@@ -185,7 +184,7 @@ public final class WebAuthnLoginFilter extends OncePerRequestFilter {
             String finishRequest = request.getParameter("finishRequest");
             WebAuthnAssertionResponse assertionResponse = JsonUtils.fromJson(finishRequest, WebAuthnAssertionResponse.class);
 
-            return new WebAuthnAssertionResponseAuthenticationToken(username, assertionResponse);
+            return new WebAuthnAssertionResponseAuthenticationToken(username, assertionRequest, assertionResponse);
         }
 
     }

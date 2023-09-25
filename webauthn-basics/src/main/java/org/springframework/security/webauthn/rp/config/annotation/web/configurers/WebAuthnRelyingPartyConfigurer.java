@@ -2,8 +2,6 @@ package org.springframework.security.webauthn.rp.config.annotation.web.configure
 
 import java.util.Map;
 
-import com.example.security.fido.login.LoginService;
-
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.NoUniqueBeanDefinitionException;
@@ -13,8 +11,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
+import org.springframework.security.webauthn.rp.WebAuthnAssertionService;
 import org.springframework.security.webauthn.rp.WebAuthnRegistrationService;
-import org.springframework.security.webauthn.rp.authentication.WebAuthnLoginAuthenticationProvider;
+import org.springframework.security.webauthn.rp.authentication.WebAuthnAssertionAuthenticationProvider;
 import org.springframework.security.webauthn.rp.web.WebAuthnLoginFilter;
 import org.springframework.security.webauthn.rp.web.WebAuthnRegistrationFilter;
 import org.springframework.util.StringUtils;
@@ -23,10 +22,10 @@ public final class WebAuthnRelyingPartyConfigurer extends AbstractHttpConfigurer
 
     @Override
     public void init(HttpSecurity httpSecurity) throws Exception {
-        LoginService loginService = getBean(httpSecurity, LoginService.class);
-        WebAuthnLoginAuthenticationProvider loginAuthenticationProvider =
-                new WebAuthnLoginAuthenticationProvider(loginService);
-        httpSecurity.authenticationProvider(loginAuthenticationProvider);
+        WebAuthnAssertionService assertionService = getBean(httpSecurity, WebAuthnAssertionService.class);
+        WebAuthnAssertionAuthenticationProvider assertionAuthenticationProvider =
+                new WebAuthnAssertionAuthenticationProvider(assertionService);
+        httpSecurity.authenticationProvider(assertionAuthenticationProvider);
     }
 
     @Override
