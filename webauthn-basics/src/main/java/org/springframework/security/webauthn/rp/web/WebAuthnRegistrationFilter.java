@@ -8,8 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-import com.example.security.fido.register.RegistrationService;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.GenericHttpMessageConverter;
@@ -18,6 +16,7 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.webauthn.rp.WebAuthnException;
+import org.springframework.security.webauthn.rp.WebAuthnRegistrationService;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationCreateRequest;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationRequest;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationResponse;
@@ -30,11 +29,11 @@ public final class WebAuthnRegistrationFilter extends OncePerRequestFilter {
     private static final String DEFAULT_REGISTRATION_FINISH_ENDPOINT_URI = "/webauthn/register/finish";
     private static final String REGISTRATION_REQUEST_ATTRIBUTE = "REGISTRATION_REQUEST";
     private static final GenericHttpMessageConverter<Object> jsonMessageConverter = HttpMessageConverters.getJsonMessageConverter();
-    private final RegistrationService registrationService;
+    private final WebAuthnRegistrationService registrationService;
     private final RequestMatcher registrationStartEndpointMatcher;
     private final RequestMatcher registrationFinishEndpointMatcher;
 
-    public WebAuthnRegistrationFilter(RegistrationService registrationService) {
+    public WebAuthnRegistrationFilter(WebAuthnRegistrationService registrationService) {
         Assert.notNull(registrationService, "registrationService cannot be null");
         this.registrationService = registrationService;
         this.registrationStartEndpointMatcher = new AntPathRequestMatcher(
@@ -97,7 +96,7 @@ public final class WebAuthnRegistrationFilter extends OncePerRequestFilter {
         WebAuthnRegistrationSuccessResponse registrationSuccessResponse;
         try {
             registrationSuccessResponse = this.registrationService.finishRegistration(
-                    registrationResponse, registrationRequest.getCredentialCreationOptions());
+                    registrationRequest, registrationResponse);
         } catch (Exception ex) {
             throw new WebAuthnException("Failed to finish WebAuthn registration.", ex);
         }

@@ -18,6 +18,7 @@ import com.yubico.webauthn.data.UserIdentity;
 import com.yubico.webauthn.data.UserVerificationRequirement;
 import com.yubico.webauthn.exception.RegistrationFailedException;
 
+import org.springframework.security.webauthn.rp.WebAuthnRegistrationService;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationCreateRequest;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationRequest;
 import org.springframework.security.webauthn.rp.data.WebAuthnRegistrationResponse;
@@ -27,13 +28,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RegistrationService {
+class RegistrationService implements WebAuthnRegistrationService {
 
   private final UserService userService;
   private final RelyingParty relyingParty;
   private final RegistrationFlowRepository registrationFlowRepository;
 
-  public RegistrationService(
+  RegistrationService(
       RelyingParty relyingParty,
       UserService userService,
       RegistrationFlowRepository registrationFlowRepository) {
@@ -51,40 +52,42 @@ public class RegistrationService {
    * The rest of this method needs to be saved into the http session because the finish step requires the excat
    * java object that was returned from this method as an input.
    *
-   * @param startRequest the json request sent from the browser
+   * @param registrationCreateRequest the json request sent from the browser
    * @return a json object with configuration details for the javascript in the browser to use to call the webAuthn api
    *
    */
+  @Override
   @Transactional(propagation = Propagation.REQUIRED)
-  public WebAuthnRegistrationRequest startRegistration(WebAuthnRegistrationCreateRequest startRequest)
-      throws JsonProcessingException {
-
+  public WebAuthnRegistrationRequest startRegistration(WebAuthnRegistrationCreateRequest registrationCreateRequest) {
     UserAccount user =
-        this.userService.createOrFindUser(startRequest.getFullName(), startRequest.getEmail());
+        this.userService.createOrFindUser(registrationCreateRequest.getFullName(), registrationCreateRequest.getEmail());
     PublicKeyCredentialCreationOptions options = createPublicKeyCredentialCreationOptions(user);
-    WebAuthnRegistrationRequest startResponse = createRegistrationStartResponse(options);
-    logWorkflow(startRequest, startResponse);
+    WebAuthnRegistrationRequest registrationRequest = createRegistrationRequest(options);
+    logWorkflow(registrationCreateRequest, registrationRequest);
 
-    return startResponse;
+    return registrationRequest;
   }
 
   private void logWorkflow(
-          WebAuthnRegistrationCreateRequest startRequest, WebAuthnRegistrationRequest startResponse)
-      throws JsonProcessingException {
+          WebAuthnRegistrationCreateRequest registrationCreateRequest, WebAuthnRegistrationRequest registrationRequest) {
     var registrationEntity = new RegistrationFlowEntity();
-    registrationEntity.setId(startResponse.getFlowId());
-    registrationEntity.setStartRequest(JsonUtils.toJson(startRequest));
-    registrationEntity.setStartResponse(JsonUtils.toJson(startResponse));
-    registrationEntity.setRegistrationResult(startResponse.getCredentialCreationOptions().toJson());
+    registrationEntity.setId(registrationRequest.getFlowId());
+    registrationEntity.setStartRequest(JsonUtils.toJson(registrationCreateRequest));
+    registrationEntity.setStartResponse(JsonUtils.toJson(registrationRequest));
+    try {
+      registrationEntity.setRegistrationResult(registrationRequest.getCredentialCreationOptions().toJson());
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
     this.registrationFlowRepository.save(registrationEntity);
   }
 
-  private WebAuthnRegistrationRequest createRegistrationStartResponse(
+  private WebAuthnRegistrationRequest createRegistrationRequest(
       PublicKeyCredentialCreationOptions options) {
-    WebAuthnRegistrationRequest startResponse = new WebAuthnRegistrationRequest();
-    startResponse.setFlowId(UUID.randomUUID());
-    startResponse.setCredentialCreationOptions(options);
-    return startResponse;
+    WebAuthnRegistrationRequest registrationRequest = new WebAuthnRegistrationRequest();
+    registrationRequest.setFlowId(UUID.randomUUID());
+    registrationRequest.setCredentialCreationOptions(options);
+    return registrationRequest;
   }
 
   private PublicKeyCredentialCreationOptions createPublicKeyCredentialCreationOptions(
@@ -118,55 +121,59 @@ public class RegistrationService {
    * This method associates a FIDO2 authenticator with a user account, by saving the details of the authenticator
    * generated public key and other metadata in the database.
    *
-   * @param finishRequest the json request sen from the browser contains the public key of the user
-   * @param credentialCreationOptions the options generated from the call to startRegistration() and should have been
+   * @param registrationRequest the json request sen from the browser contains the public key of the user
+   * @param registrationResponse the options generated from the call to startRegistration() and should have been
    *                                   pulled out of the http session by the controller that calls this method
    * @return JSON object indicating success or failure of the registration
    */
+  @Override
   @Transactional(propagation = Propagation.REQUIRED)
   public WebAuthnRegistrationSuccessResponse finishRegistration(
-          WebAuthnRegistrationResponse finishRequest,
-      PublicKeyCredentialCreationOptions credentialCreationOptions)
-      throws RegistrationFailedException, JsonProcessingException {
+          WebAuthnRegistrationRequest registrationRequest, WebAuthnRegistrationResponse registrationResponse) {
 
     FinishRegistrationOptions options =
         FinishRegistrationOptions.builder()
-            .request(credentialCreationOptions)
-            .response(finishRequest.getCredential())
+            .request(registrationRequest.getCredentialCreationOptions())
+            .response(registrationResponse.getCredential())
             .build();
-    RegistrationResult registrationResult = this.relyingParty.finishRegistration(options);
+    RegistrationResult registrationResult;
+    try {
+      registrationResult = this.relyingParty.finishRegistration(options);
+    } catch (RegistrationFailedException e) {
+      throw new RuntimeException(e);
+    }
 
     var fidoCredential =
         new FidoCredential(
             registrationResult.getKeyId().getId().getBase64Url(),
             registrationResult.getKeyId().getType().name(),
-            YubicoUtils.toUUID(credentialCreationOptions.getUser().getId()),
+            YubicoUtils.toUUID(registrationRequest.getCredentialCreationOptions().getUser().getId()),
             registrationResult.getPublicKeyCose().getBase64Url());
 
     this.userService.addCredential(fidoCredential);
 
-    WebAuthnRegistrationSuccessResponse registrationFinishResponse = new WebAuthnRegistrationSuccessResponse();
-    registrationFinishResponse.setFlowId(finishRequest.getFlowId());
-    registrationFinishResponse.setRegistrationComplete(true);
+    WebAuthnRegistrationSuccessResponse registrationSuccessResponse = new WebAuthnRegistrationSuccessResponse();
+    registrationSuccessResponse.setFlowId(registrationResponse.getFlowId());
+    registrationSuccessResponse.setRegistrationComplete(true);
 
-    logFinishStep(finishRequest, registrationResult, registrationFinishResponse);
-    return registrationFinishResponse;
+    logFinishStep(registrationResponse, registrationResult, registrationSuccessResponse);
+    return registrationSuccessResponse;
   }
 
   private void logFinishStep(
-      WebAuthnRegistrationResponse finishRequest,
+      WebAuthnRegistrationResponse registrationResponse,
       RegistrationResult registrationResult,
-      WebAuthnRegistrationSuccessResponse registrationFinishResponse) {
+      WebAuthnRegistrationSuccessResponse registrationSuccessResponse) {
     RegistrationFlowEntity registrationFlow =
         this.registrationFlowRepository
-            .findById(finishRequest.getFlowId())
+            .findById(registrationResponse.getFlowId())
             .orElseThrow(
                 () ->
                     new RuntimeException(
                         "Cloud not find a registration flow with id: "
-                            + finishRequest.getFlowId()));
-    registrationFlow.setFinishRequest(JsonUtils.toJson(finishRequest));
-    registrationFlow.setFinishResponse(JsonUtils.toJson(registrationFinishResponse));
+                            + registrationResponse.getFlowId()));
+    registrationFlow.setFinishRequest(JsonUtils.toJson(registrationResponse));
+    registrationFlow.setFinishResponse(JsonUtils.toJson(registrationSuccessResponse));
     registrationFlow.setRegistrationResult(JsonUtils.toJson(registrationResult));
   }
 }
