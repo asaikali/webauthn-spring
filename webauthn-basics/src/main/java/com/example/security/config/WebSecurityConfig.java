@@ -61,26 +61,6 @@ public class WebSecurityConfig {
     //                formLogin.defaultSuccessUrl("/quotes")
     //        );
 
-    // Configure a generic authentication filter that knows how to log in a user using a fido
-    // authentication token
-    // the key thing about this code is the convertor which can take a http request and extract out
-    // the fido
-    // credential and the authentication manager that validates the fido credential.
-    // the success handler defined below is for debug purposes so that we can see the full flow of
-    // interaction
-    // between the browser and the fido server that we are implementing in this sample normally you
-    // would configure
-    // success handler to go to a url after successfully logging in.
-
-    // http.securityContext().requireExplicitSave(false);
-
-//    var authenticationFilter =
-//        new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
-//    authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
-//    authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
-//    authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
-//    http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
     http.apply(new WebAuthnRelyingPartyConfigurer());
 
     return http.build();
