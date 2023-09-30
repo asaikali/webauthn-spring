@@ -3,6 +3,7 @@ package com.example.security.config;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -61,6 +62,7 @@ public class WebSecurityConfig {
     //                formLogin.defaultSuccessUrl("/quotes")
     //        );
 
+    http.oauth2Client(Customizer.withDefaults());
     http.apply(new WebAuthnRelyingPartyConfigurer());
 
     return http.build();
