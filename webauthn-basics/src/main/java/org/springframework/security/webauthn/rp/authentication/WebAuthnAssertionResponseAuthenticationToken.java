@@ -35,7 +35,11 @@ public class WebAuthnAssertionResponseAuthenticationToken extends AbstractAuthen
 
     @Override
     public Object getPrincipal() {
-        return null;
+        if (this.assertionResult != null) {
+            return this.assertionResult.getUsername();
+        } else {
+            return this.assertionRequest.getAssertionRequest().getUsername().get();
+        }
     }
 
     @Override
