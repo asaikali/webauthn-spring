@@ -5,14 +5,14 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.example</groupId>
-    <artifactId>authserver-basics</artifactId>
+    <artifactId>oauth</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <groupId>com.example</groupId>
-  <artifactId>quotes-resource-server-opaque</artifactId>
+  <artifactId>quotes-resource-server</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>quotes-resource-server-opaque</name>
-  <description>Example Resource Server that expects opaque tokens</description>
+  <name>quotes-resource-server</name>
+  <description>Example Resource Server that trusts the resource server</description>
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -21,11 +21,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.nimbusds</groupId>
-      <artifactId>oauth2-oidc-sdk</artifactId>
-      <version>9.14</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

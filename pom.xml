@@ -22,8 +22,8 @@
   </properties>
 
   <modules>
-    <module>webauthn-basics</module>
-    <module>authserver-basics</module>
+    <module>passwordless</module>
+    <module>oauth</module>
   </modules>
 
   <build>
