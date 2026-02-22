@@ -11,6 +11,10 @@ management:
         include: "*" # don't do this in production, it can be a security risk to expose too much.
 server:
   port: 8080
+  servlet:
+    session:
+      cookie:
+        name: WEBAPPSESSION
 
 spring:
   security:
@@ -22,11 +26,10 @@ spring:
             client-id: "quotes"
             client-secret: "abc123"
             authorization-grant-type: authorization_code
-            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope: openid
         provider:
           spring:
             # by using the issuer uri the app must make a call to the server at startup could
             # be a problem for running integration tests
             issuer-uri: http://localhost:9090
-

@@ -11,6 +11,10 @@ management:
         include: "*" # don't do this in production, it can be a security risk to expose too much.
 server:
   port: 8080
+  servlet:
+    session:
+      cookie:
+        name: WEBAPPSESSION
 
 logging:
   level:
@@ -26,7 +30,7 @@ spring:
             client-id: "quotes"
             client-secret: "abc123"
             authorization-grant-type: authorization_code
-            redirect-uri: "http://127.0.0.1:8080/login/oauth2/code/{registrationId}"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope: openid
         provider:
           spring:
@@ -34,4 +38,3 @@ spring:
             token-uri: http://localhost:9090/oauth2/token
             user-info-uri: http://localhost:9090/userinfo
             jwk-set-uri: http://localhost:9090/oauth2/jwks
-

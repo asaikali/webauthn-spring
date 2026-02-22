@@ -6,15 +6,14 @@ import com.example.security.fido.login.FidoLoginSuccessHandler;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 /**
  * This class uses the Lambda style DSL see the following blog posts for more info
@@ -26,44 +25,40 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-  /*
-   * see https://github.com/jzheaux/cve-2023-34035-mitigations/tree/main#mitigations
-   */
-  @Bean
-  MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
-    return new MvcRequestMatcher.Builder(introspector);
-  }
-
   @Bean
   SecurityFilterChain defaultSecurityFilterChain(
-      HttpSecurity http, FidoAuthenticationManager fidoAuthenticationManager,MvcRequestMatcher.Builder mvc) throws Exception {
+      HttpSecurity http, FidoAuthenticationManager fidoAuthenticationManager) throws Exception {
 
     // for education purposes we turn on the h2-console so we need to make sure that
     // spring security does not block requests to the h2 console.
     //
     // WARNING: NEVER do this in production
-    http.csrf().ignoringRequestMatchers(PathRequest.toH2Console());
-    http.headers().frameOptions().sameOrigin();
-    http.authorizeHttpRequests().requestMatchers(PathRequest.toH2Console()).permitAll();
+    http.csrf(csrf -> csrf.ignoringRequestMatchers(PathRequest.toH2Console()));
+    http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
     // requires all communications to be over tls since webauthn does not work if http is used
-    http.requiresChannel().anyRequest().requiresSecure();
+    http.redirectToHttps(Customizer.withDefaults());
 
     // configure url authorization rules
-    http.authorizeHttpRequests().requestMatchers(
-                    mvc.pattern("/"),
-                    mvc.pattern("/register"),
-                    mvc.pattern("/webauthn/login/start"),
-                    mvc.pattern("/webauthn/login/finish"),
-                    mvc.pattern("/webauthn/register/start"),
-                    mvc.pattern("/webauthn/register/finish"),
-                    mvc.pattern("/webauthn/login"),
-                    mvc.pattern("favicon.ico"))
+    http.authorizeHttpRequests(
+        authorize ->
+            authorize
+                .requestMatchers(PathRequest.toH2Console())
+                .permitAll()
+                .requestMatchers(
+                    "/",
+                    "/register",
+                    "/webauthn/login/start",
+                    "/webauthn/login/finish",
+                    "/webauthn/register/start",
+                    "/webauthn/register/finish",
+                    "/webauthn/login",
+                    "/favicon.ico")
                 .permitAll()
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                 .permitAll()
                 .anyRequest()
-                .authenticated();
+                .authenticated());
 
     // uncomment the code below and the userdetail service if you want to have a mix of login
     // methods
@@ -86,9 +81,9 @@ public class WebSecurityConfig {
 
     var authenticationFilter =
         new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
-    authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
+    authenticationFilter.setRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/fido/login"));
     authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
-    authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
+    authenticationFilter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
     http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

@@ -24,6 +24,10 @@ management:
 
 server:
   port: 9090
+  servlet:
+    session:
+      cookie:
+        name: AUTHSERVERSESSION
   ssl:
     enabled: true
     key-store-type: PKCS12

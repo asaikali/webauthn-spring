@@ -2,6 +2,7 @@ package com.example.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,17 +19,21 @@ public class ResourceServerConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         // configure the required scope for the /random-quote url
-        http.authorizeRequests()
-                .requestMatchers("/random-quote").hasAuthority("SCOPE_quotes.read")
-                .anyRequest().authenticated();
+        http.authorizeHttpRequests(
+                authorize ->
+                        authorize
+                                .requestMatchers("/random-quote")
+                                .hasAuthority("SCOPE_quotes.read")
+                                .anyRequest()
+                                .authenticated());
 
         // step cross-origin requests so that the angular public client can call this service
-        http.cors();
+        http.cors(Customizer.withDefaults());
 
         // configure the resource server to expect opaque tokens which can only be validated
         // my making a call to the auth server and asking the auth server to validate
         // the provided token is actually valid.
-        http.oauth2ResourceServer().opaqueToken();
+        http.oauth2ResourceServer(oauth2 -> oauth2.opaqueToken(Customizer.withDefaults()));
 
         // return the configured security filter chain
         return http.build();

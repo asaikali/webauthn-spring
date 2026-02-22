@@ -15,13 +15,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 /**
  *
@@ -118,21 +120,22 @@ public class SecurityFilterChainConfig {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        var authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer.authorizationServer();
+
         // apply the default configuration shipped with the authorization server
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-
-        // configure cross-origin request so that angular app can make calls to the auth server
-        http.cors(Customizer.withDefaults());
-
-        // OpenID connect /userinfo endpoint can be called with an access token and it returns
-        // a JWT with information about the user. The /userinfo end requires the caller to provide
-        // an access token, so the auth server reuses the spring security resource server support
-        // to enforce security on the /userinfo end point
-        http.oauth2ResourceServer().jwt();
-
-        // allows client apps to authenticate with the auth server using http basic authentication via client-id and
-        // client-secret
-        http.formLogin(Customizer.withDefaults());
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+                .with(authorizationServerConfigurer, Customizer.withDefaults())
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                // configure cross-origin request so that angular app can make calls to the auth server
+                .cors(Customizer.withDefaults())
+                // OpenID connect /userinfo endpoint can be called with an access token and it returns
+                // a JWT with information about the user. The /userinfo end requires the caller to provide
+                // an access token, so the auth server reuses the spring security resource server support
+                // to enforce security on the /userinfo end point
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                // allows client apps to authenticate with the auth server using http basic authentication via client-id and
+                // client-secret
+                .formLogin(Customizer.withDefaults());
 
         // build the security filter chain and return it
         return http.build();
@@ -170,12 +173,11 @@ public class SecurityFilterChainConfig {
         // spring security does not block requests to the h2 console.
         //
         // WARNING: NEVER do this in production
-        http.csrf().ignoringRequestMatchers(PathRequest.toH2Console());
-        http.headers().frameOptions().sameOrigin();
-        http.authorizeHttpRequests().requestMatchers(PathRequest.toH2Console()).permitAll();
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(PathRequest.toH2Console()));
+        http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         // requires all communications to be over tls since webauthn does not work if http is used
-        http.requiresChannel().anyRequest().requiresSecure();
+        http.redirectToHttps(Customizer.withDefaults());
 
         // define a user detail service that uses some hard coded test users
         // WARNING: NEVER do this in production
@@ -196,6 +198,8 @@ public class SecurityFilterChainConfig {
         http.authorizeHttpRequests(
                 authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers(PathRequest.toH2Console())
+                                .permitAll()
                                 .requestMatchers(
                                         "/",
                                         "/register",
@@ -204,7 +208,7 @@ public class SecurityFilterChainConfig {
                                         "/webauthn/register/start",
                                         "/webauthn/register/finish",
                                         "/webauthn/login",
-                                        "favicon.ico")
+                                        "/favicon.ico")
                                 .permitAll()
                                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations())
                                 .permitAll()
@@ -224,9 +228,9 @@ public class SecurityFilterChainConfig {
         // success handler to go to a url after successfully logging in.
         var authenticationFilter =
                 new AuthenticationFilter(fidoAuthenticationManager, new FidoAuthenticationConverter());
-        authenticationFilter.setRequestMatcher(new AntPathRequestMatcher("/fido/login"));
+        authenticationFilter.setRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/fido/login"));
         authenticationFilter.setSuccessHandler(new FidoLoginSuccessHandler());
-        authenticationFilter.setSecurityContextRepository( new HttpSessionSecurityContextRepository());
+        authenticationFilter.setSecurityContextRepository(new HttpSessionSecurityContextRepository());
         http.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // build the security filter chain and return it
@@ -239,7 +243,8 @@ public class SecurityFilterChainConfig {
      */
     private UserDetailsService userDetailsService() {
         InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        User.UserBuilder users = User.withDefaultPasswordEncoder();
+        PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        User.UserBuilder users = User.builder().passwordEncoder(passwordEncoder::encode);
 
         // add a regular user
         UserDetails user = users.username("user").password("user").roles("USER").build();

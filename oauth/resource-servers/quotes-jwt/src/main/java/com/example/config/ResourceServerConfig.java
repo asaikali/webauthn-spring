@@ -2,6 +2,7 @@ package com.example.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,17 +19,21 @@ public class ResourceServerConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         // configure the required scope for the /random-quote url
-        http.authorizeHttpRequests()
-                .requestMatchers("/random-quote").hasAuthority("SCOPE_quotes.read")
-                        .anyRequest().authenticated();
+        http.authorizeHttpRequests(
+                authorize ->
+                        authorize
+                                .requestMatchers("/random-quote")
+                                .hasAuthority("SCOPE_quotes.read")
+                                .anyRequest()
+                                .authenticated());
 
         // step cross-origin requests so that the angular public client can call this service
-        http.cors();
+        http.cors(Customizer.withDefaults());
 
         // configure the resource server to expect access tokens that are JWTs
         // JWT can be validated locally without having to make a call to the
         // authorization server.
-        http.oauth2ResourceServer().jwt();
+        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         // return the configured security filter chain
         return http.build();

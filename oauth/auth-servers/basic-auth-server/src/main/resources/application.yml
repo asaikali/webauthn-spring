@@ -24,8 +24,11 @@ management:
 
 server:
   port: 9090
+  servlet:
+    session:
+      cookie:
+        name: AUTHSERVERSESSION
 
 logging:
   level:
     org.springframework.security: info
-
