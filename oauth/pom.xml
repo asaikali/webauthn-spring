@@ -16,13 +16,9 @@
   <description>Demo project showing usage of spring authorization server</description>
 
   <modules>
-    <module>auth-server</module>
-    <module>fido-auth-server</module>
-    <module>confidential-client</module>
-    <module>quotes-resource-server</module>
-    <module>quotes-resource-server-opaque</module>
-    <module>uppercase-quotes-api</module>
-    <module>uppercase-quotes-api-opaque</module>
+    <module>auth-servers</module>
+    <module>resource-servers</module>
+    <module>clients</module>
   </modules>
 
   <dependencies>

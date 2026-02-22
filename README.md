@@ -16,7 +16,7 @@ This repository contains demos for:
 
 - Java 21
 - Maven Wrapper (`./mvnw` from repo root)
-- [Angular CLI](https://angular.io/cli) (only if you want to run `oauth/public-client`)
+- [Angular CLI](https://angular.io/cli) (only if you want to run `oauth/clients/authorization-code/spa-pkce`)
 
 ## Build from root
 
