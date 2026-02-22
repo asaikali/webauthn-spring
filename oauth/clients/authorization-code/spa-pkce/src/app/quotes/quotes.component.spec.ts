@@ -1,4 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
+import { OidcSecurityService } from 'angular-auth-oidc-client';
 
 import { QuotesComponent } from './quotes.component';
 
@@ -8,7 +12,21 @@ describe('QuotesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ QuotesComponent ]
+      declarations: [ QuotesComponent ],
+      imports: [HttpClientTestingModule],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {}
+        },
+        {
+          provide: OidcSecurityService,
+          useValue: {
+            isAuthenticated: () => of(false),
+            getAccessToken: () => of('')
+          }
+        }
+      ]
     })
     .compileComponents();
   });
@@ -16,7 +34,6 @@ describe('QuotesComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(QuotesComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

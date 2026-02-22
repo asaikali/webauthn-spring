@@ -1,21 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { OidcSecurityService, OpenIdConfiguration, UserDataResult } from 'angular-auth-oidc-client';
 import { Observable } from 'rxjs';
-import {HttpClient} from "@angular/common/http";
+import { HttpClient } from "@angular/common/http";
 
 @Component({
-  selector: 'app-home',
-  templateUrl: 'home.component.html',
+    selector: 'app-home',
+    templateUrl: 'home.component.html',
+    standalone: false
 })
 export class HomeComponent implements OnInit {
-  configuration: OpenIdConfiguration | undefined;
+  configuration$: Observable<OpenIdConfiguration | null> | undefined;
   //userDataChanged$: Observable<OidcClientNotification<any>>;
   userData$: Observable<UserDataResult> | undefined;
   isAuthenticated = false;
   constructor(public oidcSecurityService: OidcSecurityService,   private http:HttpClient) {}
 
   ngOnInit() {
-    this.configuration = this.oidcSecurityService.getConfiguration();
+    this.configuration$ = this.oidcSecurityService.getConfiguration();
     this.userData$ = this.oidcSecurityService.userData$;
 
     this.oidcSecurityService.isAuthenticated$.subscribe(({ isAuthenticated }) => {
@@ -41,15 +42,17 @@ export class HomeComponent implements OnInit {
     `
 
 
-    const accessTokenValue = 'Bearer ' + this.oidcSecurityService.getAccessToken()
+    this.oidcSecurityService.getAccessToken().subscribe((token) => {
+      const accessTokenValue = 'Bearer ' + token;
 
-    this.http.post<string>( reg, body, {
-      headers: {
-        Authorization: accessTokenValue,
-        responseType: 'text'
-      }
-    }).subscribe( data => {
-      console.log("response : " + data)
+      this.http.post<string>( reg, body, {
+        headers: {
+          Authorization: accessTokenValue,
+          responseType: 'text'
+        }
+      }).subscribe( data => {
+        console.log("response : " + data)
+      });
     });
   }
 
