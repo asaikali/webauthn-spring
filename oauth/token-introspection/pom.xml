@@ -10,12 +10,12 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>clients</artifactId>
+  <artifactId>token-introspection</artifactId>
   <packaging>pom</packaging>
-  <name>clients</name>
+  <name>token-introspection</name>
 
   <modules>
-    <module>webapp</module>
-    <module>service</module>
+    <module>quotes-introspection</module>
+    <module>uppercase-introspection</module>
   </modules>
 </project>

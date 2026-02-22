@@ -17,5 +17,6 @@
 
   <modules>
     <module>webauthn-basics</module>
+    <module>passkey-auth-server</module>
   </modules>
 </project>

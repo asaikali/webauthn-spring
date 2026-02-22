@@ -9,6 +9,7 @@ This repository contains demos for:
 
 - `passwordless/`
   - `webauthn-basics/` WebAuthn sample app
+  - `passkey-auth-server/` Passkey-enabled auth server workshop app
 - `oauth/`
   - Multi-module Spring Authorization Server samples
 
@@ -16,7 +17,7 @@ This repository contains demos for:
 
 - Java 25
 - Maven Wrapper (`./mvnw` from repo root)
-- [Angular CLI](https://angular.io/cli) (only if you want to run `oauth/clients/authorization-code/spa-pkce`)
+- [Angular CLI](https://angular.io/cli) (only if you want to run `oauth/clients/spa`)
 
 ## Build from root
 
@@ -51,5 +52,5 @@ When running the demo apps locally, a successful auth-server login can still fai
      - `{baseUrl}/login/oauth2/code/{registrationId}`
 
 2. Use different session cookie names for client and auth server:
-   - Client app (`oauth/clients/authorization-code/webapp`): `WEBAPPSESSION`
-   - Auth servers (`oauth/auth-servers/*-auth-server`): `AUTHSERVERSESSION`
+   - Client app (`oauth/clients/webapp`): `WEBAPPSESSION`
+   - Auth servers (`oauth/auth-server`, `passwordless/passkey-auth-server`): `AUTHSERVERSESSION`

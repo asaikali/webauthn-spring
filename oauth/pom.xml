@@ -16,8 +16,9 @@
   <description>Demo project showing usage of spring authorization server</description>
 
   <modules>
-    <module>auth-servers</module>
-    <module>resource-servers</module>
+    <module>auth-server</module>
+    <module>token-introspection</module>
+    <module>quotes-protected-resource</module>
     <module>clients</module>
   </modules>
 </project>
