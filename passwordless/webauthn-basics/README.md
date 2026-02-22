@@ -6,7 +6,7 @@ everything works at a low level. On the server side the Yubico java webauthn-ser
 
 ## Prerequisites 
 
-* Java 17
+* Java 25
 * FIDO2 compliance authenticator any of the following should work 
     * USB authenticator (Yubikey, Google Titan Key ... etc) 
     * MacBook with a fingerprint scanner
@@ -101,6 +101,5 @@ should be used to login a user.
 
 
  
-
 
 

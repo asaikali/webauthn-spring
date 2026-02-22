@@ -4,7 +4,7 @@ This directory contains Spring Boot OAuth/OIDC samples grouped by role and flow 
 
 ## Prerequisites
 
-* Java 21
+* Java 25
 * Maven Wrapper from repository root (`./mvnw`)
 * Node.js + npm + Angular CLI for the SPA sample
 

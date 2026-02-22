@@ -14,7 +14,7 @@ This repository contains demos for:
 
 ## Prerequisites
 
-- Java 21
+- Java 25
 - Maven Wrapper (`./mvnw` from repo root)
 - [Angular CLI](https://angular.io/cli) (only if you want to run `oauth/clients/authorization-code/spa-pkce`)
 
