@@ -1,5 +1,6 @@
 package com.example.security.fido.login;
 
+import java.util.Collections;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
 public class FidoAuthenticationToken extends AbstractAuthenticationToken {
@@ -7,7 +8,7 @@ public class FidoAuthenticationToken extends AbstractAuthenticationToken {
   private final LoginFinishRequest loginFinishRequest;
 
   public FidoAuthenticationToken(String username, LoginFinishRequest loginFinishRequest) {
-    super(null);
+    super(Collections.emptyList());
     this.username = username;
     this.loginFinishRequest = loginFinishRequest;
   }

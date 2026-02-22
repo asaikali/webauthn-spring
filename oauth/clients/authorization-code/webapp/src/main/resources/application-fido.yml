@@ -40,4 +40,5 @@ spring:
             authorization-uri: https://localhost:9090/oauth2/authorize
             token-uri: https://localhost:9090/oauth2/token
             user-info-uri: https://localhost:9090/userinfo
+            user-name-attribute: sub
             jwk-set-uri: https://localhost:9090/oauth2/jwks

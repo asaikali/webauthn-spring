@@ -3,7 +3,6 @@ package com.example.security.user;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.*;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Database representation of the user account, this is only used inside this package.
@@ -13,8 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 class UserAccountEntity {
 
   @Id
-  @GeneratedValue(generator = "UUID")
-  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+  @GeneratedValue(strategy = GenerationType.UUID)
   private UUID id;
 
   @Column(name = "full_name")

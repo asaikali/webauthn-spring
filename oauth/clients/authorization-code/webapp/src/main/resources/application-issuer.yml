@@ -35,3 +35,4 @@ spring:
             # by using the issuer uri the app must make a call to the server at startup could
             # be a problem for running integration tests
             issuer-uri: http://localhost:9090
+            user-name-attribute: sub

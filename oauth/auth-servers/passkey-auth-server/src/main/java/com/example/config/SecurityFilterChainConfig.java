@@ -4,7 +4,7 @@ package com.example.config;
 import com.example.security.fido.login.FidoAuthenticationConverter;
 import com.example.security.fido.login.FidoAuthenticationManager;
 import com.example.security.fido.login.FidoLoginSuccessHandler;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.boot.security.autoconfigure.web.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
@@ -120,7 +120,7 @@ public class SecurityFilterChainConfig {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        var authorizationServerConfigurer = OAuth2AuthorizationServerConfigurer.authorizationServer();
+        var authorizationServerConfigurer = new OAuth2AuthorizationServerConfigurer();
 
         // apply the default configuration shipped with the authorization server
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
