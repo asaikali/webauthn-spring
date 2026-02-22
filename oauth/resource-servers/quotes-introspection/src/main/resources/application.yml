@@ -13,6 +13,8 @@ server:
   port: 8083
 
 spring:
+  jpa:
+    open-in-view: false
   security:
     oauth2:
       resourceserver:

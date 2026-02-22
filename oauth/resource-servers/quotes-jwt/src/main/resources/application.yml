@@ -13,9 +13,10 @@ server:
   port: 8081
 
 spring:
+  jpa:
+    open-in-view: false
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9090
-

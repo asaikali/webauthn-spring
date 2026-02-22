@@ -17,6 +17,8 @@ server:
         name: WEBAPPSESSION
 
 spring:
+  jpa:
+    open-in-view: false
   security:
     oauth2:
       client:
