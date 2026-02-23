@@ -1,0 +1,33 @@
+management:
+  info:
+    java:
+      enabled: true
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+server:
+  port: 8182
+
+logging:
+  level:
+    org.springframework.security: info
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090
+
+tx:
+  auth-server-token-url: http://localhost:9090/oauth2/token
+  exchange-client-id: uppercase-quotes
+  exchange-client-secret: uppercase-quotes
+  actor-client-id: uppercase-quotes-opaque
+  actor-client-secret: uppercase-quotes-opaque
+  downstream-whoami-url: http://localhost:8181/api/whoami
+  scope: quotes.read

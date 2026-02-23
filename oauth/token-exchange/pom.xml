@@ -5,21 +5,19 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>com.example</groupId>
-    <artifactId>webauthn-spring</artifactId>
+    <artifactId>oauth</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
-  <groupId>com.example</groupId>
-  <artifactId>oauth</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <name>oauth</name>
+
+  <artifactId>token-exchange</artifactId>
   <packaging>pom</packaging>
-  <description>Demo project showing usage of spring authorization server</description>
+  <name>token-exchange</name>
+  <description>End-to-end OAuth2 token exchange demo with 3 apps</description>
 
   <modules>
-    <module>auth-server</module>
-    <module>token-introspection</module>
-    <module>quotes-protected-resource</module>
-    <module>clients</module>
-    <module>token-exchange</module>
+    <module>tx-webapp</module>
+    <module>tx-uppercase</module>
+    <module>tx-protected-resource</module>
   </modules>
 </project>
