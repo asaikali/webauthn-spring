@@ -1,0 +1,151 @@
+### OAuth2 Token Exchange (Impersonation) -> protected resource call
+# Goal:
+# 1) Get a user-bound subject access token (source token) via device flow.
+# 2) Exchange it for a new access token using token exchange grant.
+# 3) Call protected resource with the exchanged token.
+#
+# Why device flow here:
+# Spring Authorization Server token exchange requires a subject token tied to a principal.
+# A subject token minted with client_credentials results in invalid_grant for exchange.
+#
+# Prerequisites:
+# 1) Start auth server: ./mvnw -pl oauth/auth-server spring-boot:run
+# 2) Start resource server: ./mvnw -pl oauth/quotes-protected-resource spring-boot:run
+# 3) Run requests in order, top to bottom.
+
+@authServer = http://localhost:9090
+@resourceServer = http://localhost:8081
+
+# Subject-token client (device flow, gives user-bound token).
+@subject_client_id = device-client
+@subject_client_secret = device-client-secret
+
+# Exchange client (configured with TOKEN_EXCHANGE grant).
+@exchange_client_id = uppercase-quotes
+@exchange_client_secret = uppercase-quotes
+
+@scope = quotes.read
+
+### Step 0 (negative case): resource call without token should fail with 401.
+GET {{resourceServer}}/whoami
+Accept: application/json
+
+###
+
+### Step 1: Start device flow to obtain device_code + verification URL.
+POST {{authServer}}/oauth2/device_authorization
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+client_id={{subject_client_id}}&client_secret={{subject_client_secret}}&scope={{scope}}
+> {%
+  client.global.set("device_code", response.body.device_code);
+  client.global.set("verification_uri_complete", response.body.verification_uri_complete);
+%}
+
+### Step 2: complete the device login in a browser.
+### Open {{verification_uri_complete}} manually, then authenticate (ex: user/user).
+### Return to this file after the browser says the device is authorized.
+
+### Step 3: Poll token endpoint until subject_access_token is returned.
+### If response has authorization_pending, run this step again after a few seconds.
+POST {{authServer}}/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={{device_code}}&client_id={{subject_client_id}}&client_secret={{subject_client_secret}}
+> {%
+  if (response.body.access_token) {
+    client.global.set("subject_access_token", response.body.access_token);
+  }
+%}
+
+###
+
+### Step 4: Exchange subject token for a new access token (impersonation).
+### No actor_token is sent, so this is impersonation and not delegation.
+POST {{authServer}}/oauth2/token
+Authorization: Basic {{exchange_client_id}} {{exchange_client_secret}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange&subject_token={{subject_access_token}}&subject_token_type=urn:ietf:params:oauth:token-type:access_token&requested_token_type=urn:ietf:params:oauth:token-type:access_token&scope={{scope}}
+> {%
+  client.global.set("exchanged_access_token", response.body.access_token);
+%}
+
+###
+
+### Step 5: Call /whoami with original subject token from device flow.
+### Capture baseline claims from the original token.
+GET {{resourceServer}}/whoami
+Authorization: Bearer {{subject_access_token}}
+Accept: application/json
+
+> {%
+  const payload = response.body?.decoded_access_token?.payload || {};
+  const aud = Array.isArray(payload.aud) ? payload.aud.join(",") : (payload.aud || "N/A");
+  const scope = Array.isArray(payload.scope) ? payload.scope.join(" ") : (payload.scope || "N/A");
+
+  client.global.set("subject_token_sub", payload.sub || "N/A");
+  client.global.set("subject_token_aud", aud);
+  client.global.set("subject_token_iss", payload.iss || "N/A");
+  client.global.set("subject_token_jti", payload.jti || "N/A");
+  client.global.set("subject_token_scope", scope);
+%}
+
+###
+
+### Step 6: Call /whoami with exchanged token and compare default JWT claims.
+### Without a token customizer, this comparison relies on standard claims only.
+### Expected:
+### - `sub` stays the same (same user identity)
+### - `aud` changes (new token minted for the exchange client)
+### - `jti` changes (new token instance)
+GET {{resourceServer}}/whoami
+Authorization: Bearer {{exchanged_access_token}}
+Accept: application/json
+
+> {%
+  const payload = response.body?.decoded_access_token?.payload || {};
+  const subjectSub = client.global.get("subject_token_sub");
+  const subjectAud = client.global.get("subject_token_aud");
+  const subjectIss = client.global.get("subject_token_iss");
+  const subjectJti = client.global.get("subject_token_jti");
+  const subjectScope = client.global.get("subject_token_scope");
+
+  const exchangedAud = Array.isArray(payload.aud) ? payload.aud.join(",") : (payload.aud || "N/A");
+  const exchangedScope = Array.isArray(payload.scope) ? payload.scope.join(" ") : (payload.scope || "N/A");
+  const exchangedSub = payload.sub || "N/A";
+  const exchangedIss = payload.iss || "N/A";
+  const exchangedJti = payload.jti || "N/A";
+
+  client.log("=== Impersonation Comparison (Default Claims) ===");
+  client.log("subject token   -> sub=" + subjectSub + ", aud=" + subjectAud + ", iss=" + subjectIss
+      + ", jti=" + subjectJti + ", scope=" + subjectScope);
+  client.log("exchanged token -> sub=" + exchangedSub + ", aud=" + exchangedAud + ", iss=" + exchangedIss
+      + ", jti=" + exchangedJti + ", scope=" + exchangedScope);
+
+  const sameSub = subjectSub !== "N/A" && exchangedSub !== "N/A" && subjectSub === exchangedSub;
+  const changedAud = subjectAud !== "N/A" && exchangedAud !== "N/A" && subjectAud !== exchangedAud;
+  const changedJti = subjectJti !== "N/A" && exchangedJti !== "N/A" && subjectJti !== exchangedJti;
+
+  client.log("RESULT: same_sub=" + sameSub + ", changed_aud=" + changedAud + ", changed_jti=" + changedJti);
+
+  if (!sameSub) {
+    throw new Error("Expected impersonation exchange to keep the same subject (sub)");
+  }
+  if (!changedAud) {
+    throw new Error("Expected exchanged token audience (aud) to differ from original token");
+  }
+  if (!changedJti) {
+    throw new Error("Expected exchanged token jti to differ from original token");
+  }
+%}
+
+###
+
+### Step 7: Call protected endpoint /random-quote with exchanged token.
+GET {{resourceServer}}/random-quote
+Authorization: Bearer {{exchanged_access_token}}
+Accept: application/json

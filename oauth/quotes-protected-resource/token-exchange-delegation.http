@@ -1,0 +1,173 @@
+### OAuth2 Token Exchange (Delegation) -> protected resource call
+# Goal:
+# 1) Get a user-bound subject token via device flow.
+# 2) Get an actor token (service token) via client credentials.
+# 3) Exchange subject + actor tokens for a delegated access token.
+# 4) Call /whoami to compare default claims between original and delegated tokens.
+#
+# Note:
+# This demo intentionally uses Spring Authorization Server defaults (no token customizer).
+# Because of that, delegated tokens usually do NOT expose an explicit `act` claim.
+# Delegation is still valid and demonstrated by a successful exchange request with actor_token.
+#
+# Prerequisites:
+# 1) Start auth server: ./mvnw -pl oauth/auth-server spring-boot:run
+# 2) Start resource server: ./mvnw -pl oauth/quotes-protected-resource spring-boot:run
+# 3) Run requests in order, top to bottom.
+
+@authServer = http://localhost:9090
+@resourceServer = http://localhost:8081
+
+# Subject token source (end-user via device flow).
+@subject_client_id = device-client
+@subject_client_secret = device-client-secret
+
+# Actor token source (machine/service token).
+@actor_client_id = uppercase-quotes-opaque
+@actor_client_secret = uppercase-quotes-opaque
+
+# Client performing token exchange (must issue JWT for resource server use).
+@exchange_client_id = uppercase-quotes
+@exchange_client_secret = uppercase-quotes
+
+@scope = quotes.read
+
+### Step 0 (negative case): resource call without token should fail with 401.
+GET {{resourceServer}}/whoami
+Accept: application/json
+
+###
+
+### Step 1: Start device flow to obtain device_code + verification URL.
+POST {{authServer}}/oauth2/device_authorization
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+client_id={{subject_client_id}}&client_secret={{subject_client_secret}}&scope={{scope}}
+> {%
+  client.global.set("device_code", response.body.device_code);
+  client.global.set("verification_uri_complete", response.body.verification_uri_complete);
+%}
+
+###
+
+### Step 2: complete the device login in a browser.
+### Open {{verification_uri_complete}} manually, then authenticate (ex: user/user).
+### Return to this file after the browser says the device is authorized.
+
+### Step 3: Poll token endpoint until subject_access_token is returned.
+### If response has authorization_pending, run this step again after a few seconds.
+POST {{authServer}}/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={{device_code}}&client_id={{subject_client_id}}&client_secret={{subject_client_secret}}
+> {%
+  if (response.body.access_token) {
+    client.global.set("subject_access_token", response.body.access_token);
+  }
+%}
+
+###
+
+### Step 4: Obtain actor token via client credentials (service/machine identity).
+POST {{authServer}}/oauth2/token
+Authorization: Basic {{actor_client_id}} {{actor_client_secret}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=client_credentials&scope={{scope}}
+> {%
+  client.global.set("actor_access_token", response.body.access_token);
+%}
+
+###
+
+### Step 5: Token exchange with both subject_token and actor_token (delegation).
+POST {{authServer}}/oauth2/token
+Authorization: Basic {{exchange_client_id}} {{exchange_client_secret}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange&subject_token={{subject_access_token}}&subject_token_type=urn:ietf:params:oauth:token-type:access_token&actor_token={{actor_access_token}}&actor_token_type=urn:ietf:params:oauth:token-type:access_token&requested_token_type=urn:ietf:params:oauth:token-type:access_token&scope={{scope}}
+> {%
+  client.global.set("delegated_access_token", response.body.access_token);
+%}
+
+###
+
+### Step 6: Call /whoami with original subject token (from device flow).
+### Capture baseline claims from the original token.
+GET {{resourceServer}}/whoami
+Authorization: Bearer {{subject_access_token}}
+Accept: application/json
+
+> {%
+  const payload = response.body?.decoded_access_token?.payload || {};
+  const aud = Array.isArray(payload.aud) ? payload.aud.join(",") : (payload.aud || "N/A");
+  const scope = Array.isArray(payload.scope) ? payload.scope.join(" ") : (payload.scope || "N/A");
+
+  client.global.set("subject_token_sub", payload.sub || "N/A");
+  client.global.set("subject_token_aud", aud);
+  client.global.set("subject_token_iss", payload.iss || "N/A");
+  client.global.set("subject_token_jti", payload.jti || "N/A");
+  client.global.set("subject_token_scope", scope);
+%}
+
+###
+
+### Step 7: Call /whoami with delegated token and print clear comparison.
+### Expected (with default claims only):
+### - `sub` stays the same user
+### - `aud` changes (new delegated token minted for exchange client)
+### - `jti` changes (different token instance)
+### - `act` claim may be absent without a customizer
+GET {{resourceServer}}/whoami
+Authorization: Bearer {{delegated_access_token}}
+Accept: application/json
+
+> {%
+  const payload = response.body?.decoded_access_token?.payload || {};
+  const subjectSub = client.global.get("subject_token_sub");
+  const subjectAud = client.global.get("subject_token_aud");
+  const subjectIss = client.global.get("subject_token_iss");
+  const subjectJti = client.global.get("subject_token_jti");
+  const subjectScope = client.global.get("subject_token_scope");
+
+  const delegatedAud = Array.isArray(payload.aud) ? payload.aud.join(",") : (payload.aud || "N/A");
+  const delegatedScope = Array.isArray(payload.scope) ? payload.scope.join(" ") : (payload.scope || "N/A");
+  const delegatedSub = payload.sub || "N/A";
+  const delegatedIss = payload.iss || "N/A";
+  const delegatedJti = payload.jti || "N/A";
+  const hasAct = !!payload.act;
+
+  client.log("=== Delegation Comparison (Default Claims) ===");
+  client.log("subject token   -> sub=" + subjectSub + ", aud=" + subjectAud + ", iss=" + subjectIss
+      + ", jti=" + subjectJti + ", scope=" + subjectScope);
+  client.log("delegated token -> sub=" + delegatedSub + ", aud=" + delegatedAud + ", iss=" + delegatedIss
+      + ", jti=" + delegatedJti + ", scope=" + delegatedScope + ", has_act_claim=" + hasAct);
+
+  const sameSub = subjectSub !== "N/A" && delegatedSub !== "N/A" && subjectSub === delegatedSub;
+  const changedAud = subjectAud !== "N/A" && delegatedAud !== "N/A" && subjectAud !== delegatedAud;
+  const changedJti = subjectJti !== "N/A" && delegatedJti !== "N/A" && subjectJti !== delegatedJti;
+
+  client.log("RESULT: same_sub=" + sameSub + ", changed_aud=" + changedAud
+      + ", changed_jti=" + changedJti + ", has_act_claim=" + hasAct);
+
+  if (!sameSub) {
+    throw new Error("Expected delegated exchange to keep the same subject (sub)");
+  }
+  if (!changedAud) {
+    throw new Error("Expected delegated token audience (aud) to differ from original token");
+  }
+  if (!changedJti) {
+    throw new Error("Expected delegated token jti to differ from original token");
+  }
+%}
+
+###
+
+### Step 8: Call protected endpoint /random-quote with delegated token.
+GET {{resourceServer}}/random-quote
+Authorization: Bearer {{delegated_access_token}}
+Accept: application/json

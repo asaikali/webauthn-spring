@@ -350,7 +350,8 @@ class AuthorizationServerConfiguration {
      * </p>
      *
      * <p>
-     * This method registers a client that is allowed to only use the client credentials
+     * This method registers a confidential client that can obtain tokens via
+     * client credentials and exchange a subject token for another token.
      * </p>
      */
     private void clientCredentialsTestClient(RegisteredClientRepository registeredClientRepository){
@@ -361,6 +362,7 @@ class AuthorizationServerConfiguration {
                         .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.SELF_CONTAINED).build())
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .authorizationGrantType(AuthorizationGrantType.TOKEN_EXCHANGE)
                         .scope(OidcScopes.OPENID)
                         .scope("quotes.read")
                         .build();
@@ -392,6 +394,7 @@ class AuthorizationServerConfiguration {
                         .tokenSettings(TokenSettings.builder().accessTokenFormat(OAuth2TokenFormat.REFERENCE).build())
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .authorizationGrantType(AuthorizationGrantType.TOKEN_EXCHANGE)
                         .scope(OidcScopes.OPENID)
                         .scope("quotes.read")
                         .build();
