@@ -1,0 +1,15 @@
+spring:
+  main:
+    web-application-type: none
+  shell:
+    interactive:
+      enabled: true
+    noninteractive:
+      enabled: false
+
+cli:
+  auth-server-base-url: http://localhost:9090
+  resource-server-base-url: http://localhost:8081
+  client-id: device-client
+  client-secret: device-client-secret
+  scope: quotes.read

@@ -17,5 +17,6 @@
   <modules>
     <module>webapp</module>
     <module>service</module>
+    <module>cli</module>
   </modules>
 </project>

@@ -1,0 +1,5 @@
+   ____ _     ___
+  / ___| |   |_ _|  OAuth CLI
+ | |   | |    | |   Device Flow Client
+ | |___| |___ | |   Commands: login | read | whoami
+  \____|_____|___|
