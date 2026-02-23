@@ -24,6 +24,8 @@ public class ResourceServerConfig {
                         authorize
                                 .requestMatchers("/random-quote")
                                 .hasAuthority("SCOPE_quotes.read")
+                                .requestMatchers("/whoami")
+                                .authenticated()
                                 .anyRequest()
                                 .authenticated());
 
@@ -33,7 +35,17 @@ public class ResourceServerConfig {
         // configure the resource server to expect access tokens that are JWTs
         // JWT can be validated locally without having to make a call to the
         // authorization server.
-        http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        http.oauth2ResourceServer(
+                oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults())
+                        .protectedResourceMetadata(
+                                metadata -> metadata.protectedResourceMetadataCustomizer(
+                                        builder -> builder
+                                                .resource("http://localhost:8081")
+                                                .authorizationServer("http://localhost:9090")
+                                                .scope("quotes.read")
+                                                .resourceName("quotes-protected-resource")
+                                                .tlsClientCertificateBoundAccessTokens(false))));
 
         // return the configured security filter chain
         return http.build();
