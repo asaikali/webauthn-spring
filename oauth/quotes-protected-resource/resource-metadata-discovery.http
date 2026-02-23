@@ -1,0 +1,66 @@
+### Protected Resource Metadata Discovery Flow
+# Goal:
+# 1) Make an unauthenticated request to a protected endpoint.
+# 2) Read the `WWW-Authenticate` challenge and extract `resource_metadata`.
+# 3) Fetch protected resource metadata.
+# 4) Follow discovered authorization server issuer to AS metadata documents.
+#
+# Prerequisites:
+# 1) Start auth server: ./mvnw -pl oauth/auth-server spring-boot:run
+# 2) Start resource server: ./mvnw -pl oauth/quotes-protected-resource spring-boot:run
+
+@resourceServer = http://localhost:8081
+
+### Step 1: Call protected endpoint without access token (expected 401).
+### We extract the `resource_metadata` URL from the WWW-Authenticate header.
+GET {{resourceServer}}/whoami
+Accept: application/json
+
+> {%
+  const challenge = response.headers.valueOf("WWW-Authenticate") || "";
+  const match = challenge.match(/resource_metadata="([^"]+)"/);
+
+  if (!match) {
+    throw new Error("resource_metadata was not present in WWW-Authenticate header");
+  }
+
+  client.global.set("resource_metadata_url", match[1]);
+%}
+
+###
+
+### Step 2: Fetch protected resource metadata from the advertised URL.
+GET {{resource_metadata_url}}
+Accept: application/json
+
+> {%
+  let issuer = null;
+  const body = response.body;
+
+  if (Array.isArray(body.authorization_servers) && body.authorization_servers.length > 0) {
+    issuer = body.authorization_servers[0];
+  } else if (body.authorization_server) {
+    issuer = body.authorization_server;
+  }
+
+  if (!issuer) {
+    throw new Error("No authorization server issuer found in protected resource metadata");
+  }
+
+  issuer = issuer.replace(/\/$/, "");
+  client.global.set("auth_server_issuer", issuer);
+  client.global.set("as_oauth_metadata_url", issuer + "/.well-known/oauth-authorization-server");
+  client.global.set("as_oidc_metadata_url", issuer + "/.well-known/openid-configuration");
+%}
+
+###
+
+### Step 3: Fetch OAuth Authorization Server Metadata from discovered issuer.
+GET {{as_oauth_metadata_url}}
+Accept: application/json
+
+###
+
+### Step 4: Fetch OIDC Discovery document from discovered issuer.
+GET {{as_oidc_metadata_url}}
+Accept: application/json

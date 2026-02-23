@@ -1,0 +1,73 @@
+### OAuth2 Device Flow -> protected /whoami call
+# This file demonstrates the full device authorization flow:
+# 1) Device client asks for a device_code/user_code.
+# 2) Human user opens verification URL and authenticates/consents.
+# 3) Device client polls /oauth2/token until access token is issued.
+# 4) Access token is used to call resource server /whoami.
+#
+# Prerequisites:
+# 1) Start auth server: ./mvnw -pl oauth/auth-server spring-boot:run
+# 2) Start resource server: ./mvnw -pl oauth/quotes-protected-resource spring-boot:run
+# 3) Auth server must have a client registered for device flow (device_code grant type).
+
+@authServer = http://localhost:9090
+@resourceServer = http://localhost:8081
+@client_id = device-client
+@client_secret = device-client-secret
+@scope = quotes.read
+
+### Step 0 (negative case): Call protected endpoint without an access token.
+### Expected result: 401 Unauthorized from the resource server.
+GET {{resourceServer}}/whoami
+Accept: application/json
+
+###
+
+### Step 1: Request device and user codes from the authorization server.
+### Response should include: device_code, user_code, verification_uri, and interval.
+POST {{authServer}}/oauth2/device_authorization
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+client_id={{client_id}}&client_secret={{client_secret}}&scope={{scope}}
+
+> {%
+  client.global.set("device_code", response.body.device_code);
+  client.global.set("user_code", response.body.user_code);
+  client.global.set("verification_uri", response.body.verification_uri);
+  client.global.set("verification_uri_complete", response.body.verification_uri_complete);
+  client.global.set("poll_interval", response.body.interval);
+%}
+
+###
+
+### Step 2: Open verification page in browser.
+### Log in (ex: user/user). This sample's device client is configured without consent prompts.
+### If verification_uri_complete is returned, opening it pre-fills the user code.
+### Do not use the IntelliJ HTTP response body itself as completion; you must complete browser login.
+GET {{verification_uri_complete}}
+Accept: text/html
+
+###
+
+### Step 3: Poll token endpoint until access token is returned.
+### If user has not completed verification yet, response may be authorization_pending.
+### If you receive access_denied, start over from Step 1 to get a fresh device_code.
+POST {{authServer}}/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={{device_code}}&client_id={{client_id}}&client_secret={{client_secret}}
+
+> {%
+  if (response.body.access_token) {
+    client.global.set("access_token", response.body.access_token);
+  }
+%}
+
+###
+
+### Step 4: Call protected endpoint using the issued Bearer token.
+GET {{resourceServer}}/whoami
+Authorization: Bearer {{access_token}}
+Accept: application/json
