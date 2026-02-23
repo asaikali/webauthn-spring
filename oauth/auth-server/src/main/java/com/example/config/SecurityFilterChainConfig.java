@@ -118,7 +118,10 @@ public class SecurityFilterChainConfig {
         http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
                 .with(
                         authorizationServerConfigurer,
-                        authorizationServer -> authorizationServer.oidc(Customizer.withDefaults()))
+                        authorizationServer -> authorizationServer
+                                .oidc(Customizer.withDefaults())
+                                .deviceAuthorizationEndpoint(Customizer.withDefaults())
+                                .deviceVerificationEndpoint(Customizer.withDefaults()))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 // configure cross-origin request so that angular app can make calls to the auth server
                 .cors(Customizer.withDefaults())

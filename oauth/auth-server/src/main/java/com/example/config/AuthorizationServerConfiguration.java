@@ -172,6 +172,7 @@ class AuthorizationServerConfiguration {
         this.createConfidentialTestClient(repo);
         this.createPublicTestClient(repo);
         this.clientCredentialsTestClient(repo);
+        this.deviceFlowClient(repo);
         this.opaqueClients(repo);
         return repo;
     }
@@ -397,5 +398,27 @@ class AuthorizationServerConfiguration {
 
         registeredClientRepository.save(client);
         registeredClientRepository.save(resourceServer);
+    }
+
+    /**
+     * <p>
+     * Registers a public client for OAuth2 Device Authorization Grant (device flow).
+     * This client is intended for input-constrained devices where the user authenticates
+     * on a second device/browser.
+     * </p>
+     */
+    private void deviceFlowClient(RegisteredClientRepository registeredClientRepository){
+        RegisteredClient deviceClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("device-client")
+                        .clientSecret("{noop}device-client-secret")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                        .authorizationGrantType(new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:device_code"))
+                        .scope("quotes.read")
+                        .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+                        .build();
+
+        registeredClientRepository.save(deviceClient);
     }
 }
