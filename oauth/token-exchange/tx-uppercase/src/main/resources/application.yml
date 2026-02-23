@@ -22,6 +22,7 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://localhost:9090
+          audiences: quotes
 
 tx:
   auth-server-token-url: http://localhost:9090/oauth2/token
