@@ -11,12 +11,21 @@ This directory contains Spring Boot OAuth/OIDC samples grouped by role and flow 
 ## Project Layout
 
 * `auth-server` primary authorization server sample
+* `protocol-walkthroughs` manual, comment-guided HTTP walkthroughs for learning the protocols step by step
 * `quotes-protected-resource` resource server that validates JWT access tokens
 * `token-introspection/quotes-introspection` resource server that validates tokens via introspection
 * `clients/webapp` server-rendered web app using authorization code flow
 * `clients/spa` Angular SPA using authorization code + PKCE
 * `clients/service` client-credentials API using JWT access tokens
 * `token-introspection/uppercase-introspection` client-credentials API using introspection
+
+## Protocol Walkthroughs
+
+For manual protocol exploration, see:
+
+* `/Users/adib/dev/asaikali/webauthn-spring/oauth/protocol-walkthroughs`
+
+These `.http` files are written as guided walkthroughs with comments between requests so you can execute flows one step at a time and inspect the protocol directly.
 
 ## Quick Start Scenarios
 
