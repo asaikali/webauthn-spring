@@ -1,0 +1,134 @@
+### OAuth2 Pushed Authorization Request (PAR) Authorization Code Flow
+# Goal:
+# 1) Discover the PAR endpoint from server metadata.
+# 2) Push the authorization request directly to the auth server.
+# 3) Receive a short-lived `request_uri`.
+# 4) Open the normal authorization endpoint in a browser using `request_uri`.
+# 5) Copy the authorization code from the browser redirect URL.
+# 6) Exchange the code for tokens using the same PKCE verifier.
+#
+# Why this matters:
+# PAR moves the authorization request parameters off the front channel.
+# Instead of sending the full request through the browser as query parameters,
+# the client pushes the request directly to the authorization server and only
+# sends `client_id` + `request_uri` through the browser.
+#
+# Prerequisites:
+# 1) Start auth server: ./mvnw -pl oauth/auth-server spring-boot:run
+# 2) This walkthrough uses the confidential client registered as:
+#    client_id=quotes, client_secret=abc123
+# 3) The browser step will redirect to http://127.0.0.1:8080/ after login.
+#    You do not need a web app running on port 8080 for this walkthrough.
+#    If nothing is listening there, the browser will fail to load the page,
+#    but the address bar will still contain the authorization code to copy.
+#
+# Notes:
+# 1) This auth server expects PKCE on these authorization requests.
+# 2) The fixed verifier/challenge pair below is used to keep the walkthrough manual.
+
+@authServer = http://localhost:9090
+@client_id = quotes
+@client_secret = abc123
+@redirect_uri = http://127.0.0.1:8080/
+@scope = openid%20quotes.read
+@state = par-demo-state
+@code_verifier = par-demo-verifier-1234567890abcdef-uvwxyz-ABCDEFG
+@code_challenge = hwq_-lWhFiLSDMutcBeY2t7ftUkYI-clmfYqW2kHjCE
+
+### Step 1: Fetch OIDC discovery metadata.
+### Confirm that `pushed_authorization_request_endpoint` is present.
+GET {{authServer}}/.well-known/openid-configuration
+Accept: application/json
+
+> {%
+  const parEndpoint = response.body.pushed_authorization_request_endpoint;
+  if (!parEndpoint) {
+    throw new Error("Server metadata did not advertise pushed_authorization_request_endpoint");
+  }
+  client.global.set("par_endpoint", parEndpoint);
+%}
+
+###
+
+### Step 2: Push the authorization request to the PAR endpoint.
+### Expected result: HTTP 201 with `request_uri` and `expires_in`.
+POST {{par_endpoint}}
+Authorization: Basic {{client_id}} {{client_secret}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+response_type=code&client_id={{client_id}}&redirect_uri={{redirect_uri}}&scope={{scope}}&state={{state}}&code_challenge={{code_challenge}}&code_challenge_method=S256
+
+> {%
+  if (!response.body.request_uri) {
+    throw new Error("PAR response did not contain request_uri");
+  }
+  client.global.set("request_uri", response.body.request_uri);
+
+  const authorizationUrl =
+      "http://localhost:9090/oauth2/authorize?client_id=quotes&request_uri="
+      + encodeURIComponent(response.body.request_uri);
+
+  client.global.set("authorization_url", authorizationUrl);
+  client.log("Open this URL in a browser:");
+  client.log(authorizationUrl);
+%}
+
+###
+
+### Step 3: Open the authorization URL printed in the console after Step 2.
+### The same URL is also available as:
+### {{authorization_url}}
+###
+### Then:
+### 1) Log in with user/user
+### 2) Approve consent if prompted
+### 3) After redirect, copy the `code` query parameter from the browser address bar
+### 4) Paste that value into `@authorization_code` at the top of this file
+### 5) If something is already running on port 8080, the page may still render normally.
+###    That is fine. The important part is the `?code=...` value in the browser URL.
+
+###
+
+### Step 4: Exchange the authorization code for tokens.
+### This must use the same redirect_uri and PKCE code_verifier as the pushed request.
+### Do not run this step until you replace `@authorization_code` with the real code from Step 3.
+
+# After Step 3, copy only the value of the `code` query parameter from the browser URL.
+# Example browser URL:
+# http://127.0.0.1:8080/?code=abc123xyz&state=par-demo-state
+# Example value to paste below:
+# abc123xyz
+@authorization_code = 3ZMxy7YNW-FQEM5R1Yr_1ZTHm2fv0fI3BVliJ7HGz15pbanuOSPDY1J2rkj3pKnMOdPLR7ZMfcvtT6FPodtRiEZmgiuo0BcO_eepPe2x8Eg57g5wypPWxDrA-lIiS0KV
+
+POST {{authServer}}/oauth2/token
+Authorization: Basic {{client_id}} {{client_secret}}
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=authorization_code&code={{authorization_code}}&redirect_uri={{redirect_uri}}&code_verifier={{code_verifier}}
+
+> {%
+  if (response.body.access_token) {
+    client.global.set("access_token", response.body.access_token);
+  }
+%}
+
+###
+
+### Step 5: Call the OIDC UserInfo endpoint with the issued access token.
+GET {{authServer}}/userinfo
+Authorization: Bearer {{access_token}}
+Accept: application/json
+
+###
+
+### Step 6 (optional): Start the `quotes-protected-resource` sample if you want
+### to use the same access token against a resource server endpoint.
+### Run:
+### ./mvnw -pl oauth/quotes-protected-resource spring-boot:run
+###
+### That sample runs on http://127.0.0.1:8081 and exposes `/whoami`.
+GET http://127.0.0.1:8081/whoami
+Authorization: Bearer {{access_token}}
+Accept: application/json

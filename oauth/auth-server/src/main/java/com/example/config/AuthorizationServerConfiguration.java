@@ -128,7 +128,10 @@ class AuthorizationServerConfiguration {
      */
     @Bean
     public AuthorizationServerSettings  authorizationServerSettings() {
-        return AuthorizationServerSettings.builder().build();
+        return AuthorizationServerSettings.builder()
+                .issuer("http://localhost:9090")
+                .pushedAuthorizationRequestEndpoint("/oauth2/par")
+                .build();
     }
 
     /**

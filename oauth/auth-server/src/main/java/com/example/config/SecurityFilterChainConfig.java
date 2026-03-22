@@ -120,6 +120,7 @@ public class SecurityFilterChainConfig {
                         authorizationServerConfigurer,
                         authorizationServer -> authorizationServer
                                 .oidc(Customizer.withDefaults())
+                                .pushedAuthorizationRequestEndpoint(Customizer.withDefaults())
                                 .deviceAuthorizationEndpoint(Customizer.withDefaults())
                                 .deviceVerificationEndpoint(Customizer.withDefaults()))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())

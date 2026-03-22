@@ -20,6 +20,7 @@ These files are intentionally coupled to the sample authorization server configu
 * `resource-metadata-discovery.http` - inspect a protected resource challenge and follow discovery metadata
 * `client-credentials-whoami.http` - obtain a machine token and call a protected endpoint
 * `device-flow-whoami.http` - complete device authorization flow and call a protected endpoint
+* `par-authorization-code.http` - push an authorization request, obtain a `request_uri`, and complete authorization code flow manually
 * `token-exchange-impersonation.http` - exchange a user-bound token and compare claims
 * `token-exchange-delegation.http` - exchange with subject and actor tokens to demonstrate delegation
 
