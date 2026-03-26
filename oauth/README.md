@@ -15,6 +15,7 @@ This directory contains Spring Boot OAuth/OIDC samples grouped by role and flow 
 * `quotes-protected-resource` resource server that validates JWT access tokens
 * `token-introspection/quotes-introspection` resource server that validates tokens via introspection
 * `clients/webapp` server-rendered web app using authorization code flow
+* `clients/par-client` server-rendered web app using authorization code flow with PAR
 * `clients/spa` Angular SPA using authorization code + PKCE
 * `clients/service` client-credentials API using JWT access tokens
 * `token-introspection/uppercase-introspection` client-credentials API using introspection
@@ -41,6 +42,12 @@ These `.http` files are written as guided walkthroughs with comments between req
 1. Run `auth-server`
 2. Run `./mvnw -pl oauth/clients/webapp spring-boot:run`
 3. Open [http://127.0.0.1:8080](http://127.0.0.1:8080)
+
+### Authorization Code + PAR: Server Web App
+
+1. Run `auth-server`
+2. Run `./mvnw -pl oauth/clients/par-client spring-boot:run`
+3. Open [http://127.0.0.1:8085](http://127.0.0.1:8085)
 
 ### Authorization Code + PKCE: SPA
 

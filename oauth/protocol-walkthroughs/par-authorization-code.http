@@ -99,7 +99,7 @@ response_type=code&client_id={{client_id}}&redirect_uri={{redirect_uri}}&scope={
 # http://127.0.0.1:8080/?code=abc123xyz&state=par-demo-state
 # Example value to paste below:
 # abc123xyz
-@authorization_code = 3ZMxy7YNW-FQEM5R1Yr_1ZTHm2fv0fI3BVliJ7HGz15pbanuOSPDY1J2rkj3pKnMOdPLR7ZMfcvtT6FPodtRiEZmgiuo0BcO_eepPe2x8Eg57g5wypPWxDrA-lIiS0KV
+@authorization_code = COPY-PASTE-AUTH-CODE
 
 POST {{authServer}}/oauth2/token
 Authorization: Basic {{client_id}} {{client_secret}}

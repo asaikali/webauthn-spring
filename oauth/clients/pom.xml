@@ -16,6 +16,7 @@
 
   <modules>
     <module>webapp</module>
+    <module>par-client</module>
     <module>service</module>
     <module>cli</module>
   </modules>

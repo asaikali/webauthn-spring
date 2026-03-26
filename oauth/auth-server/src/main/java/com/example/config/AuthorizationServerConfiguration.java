@@ -173,6 +173,7 @@ class AuthorizationServerConfiguration {
     public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {
         var repo =  new JdbcRegisteredClientRepository(jdbcTemplate);
         this.createConfidentialTestClient(repo);
+        this.createParClient(repo);
         this.createPublicTestClient(repo);
         this.clientCredentialsTestClient(repo);
         this.deviceFlowClient(repo);
@@ -301,6 +302,25 @@ class AuthorizationServerConfiguration {
                         .build();
 
         registeredClientRepository.save(confidentialClient);
+    }
+
+    private void createParClient(RegisteredClientRepository registeredClientRepository){
+        RegisteredClient parClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("par-client")
+                        .clientSecret("{noop}par-client-secret")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .redirectUri("http://127.0.0.1:8085/login/oauth2/code/demoAuthServer")
+                        .redirectUri("http://127.0.0.1:8085/")
+                        .redirectUri("http://localhost:8085/login/oauth2/code/demoAuthServer")
+                        .redirectUri("http://localhost:8085/")
+                        .scope(OidcScopes.OPENID)
+                        .scope("quotes.read")
+                        .build();
+
+        registeredClientRepository.save(parClient);
     }
 
     /**
