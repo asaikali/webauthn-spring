@@ -14,3 +14,5 @@ The auth server seeds a few test clients at startup. For token exchange, use:
 
 * `uppercase-quotes` with secret `uppercase-quotes` (grants: `client_credentials`, `urn:ietf:params:oauth:grant-type:token-exchange`)
 * `uppercase-quotes-opaque` with secret `uppercase-quotes-opaque` (grants: `client_credentials`, `urn:ietf:params:oauth:grant-type:token-exchange`)
+* `device-client` with secret `device-client-secret` (grant: `urn:ietf:params:oauth:grant-type:device_code`)
+* `protected-test-api-hypermedia-client` with secret `protected-test-api-secret` (grant: `urn:ietf:params:oauth:grant-type:device_code`)

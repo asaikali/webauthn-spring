@@ -177,6 +177,7 @@ class AuthorizationServerConfiguration {
         this.createPublicTestClient(repo);
         this.clientCredentialsTestClient(repo);
         this.deviceFlowClient(repo);
+        this.agentProtectedTestApiDeviceFlowClient(repo);
         this.opaqueClients(repo);
         return repo;
     }
@@ -446,6 +447,21 @@ class AuthorizationServerConfiguration {
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                         .authorizationGrantType(new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:device_code"))
                         .scope("quotes.read")
+                        .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+                        .build();
+
+        registeredClientRepository.save(deviceClient);
+    }
+
+    private void agentProtectedTestApiDeviceFlowClient(RegisteredClientRepository registeredClientRepository){
+        RegisteredClient deviceClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("protected-test-api-hypermedia-client")
+                        .clientSecret("{noop}protected-test-api-secret")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                        .authorizationGrantType(new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:device_code"))
+                        .scope("hypermedia.access")
                         .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                         .build();
 

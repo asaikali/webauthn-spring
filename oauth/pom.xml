@@ -17,6 +17,7 @@
 
   <modules>
     <module>auth-server</module>
+    <module>agent-protected-test-api</module>
     <module>token-introspection</module>
     <module>quotes-protected-resource</module>
     <module>clients</module>

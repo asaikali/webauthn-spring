@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: protected-test-api
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9090
+          jwk-set-uri: http://localhost:9090/oauth2/jwks
+
+server:
+  port: 8082
+
+identity-broker:
+  issuer-uri: http://localhost:9090

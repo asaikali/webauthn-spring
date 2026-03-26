@@ -1,0 +1,137 @@
+### protected-test-api - Device Flow Demo Collection
+###
+### Purpose:
+### 1) Inspect hypermedia controls at API root
+### 2) Explore RFC 9728 protected resource metadata discovery from a 401 challenge
+### 3) Run OAuth device flow manually against auth-server
+### 4) Call protected endpoint with the auth-server-issued bearer token
+###
+### Notes:
+### - This file does NOT start app processes.
+### - Start apps first:
+###   - auth-server on http://localhost:9090
+###   - protected-test-api on http://localhost:8082
+### - Run requests in order.
+###
+### IntelliJ tip:
+### - Response handler scripts in this file store values globally:
+###   {{deviceCode}}, {{userCode}}, {{verificationUri}},
+###   {{verificationUriComplete}}, {{accessToken}}, {{resourceMetadataUrl}}
+
+@protectedApiUrl = http://localhost:8082
+@brokerUrl = http://localhost:9090
+@clientId = protected-test-api-hypermedia-client
+@clientSecret = protected-test-api-secret
+@scope = hypermedia.access
+
+### 0) Negative Test (post-login) - No Token
+### Should still return 401 + WWW-Authenticate including resource_metadata
+GET {{protectedApiUrl}}/protected
+Accept: application/json
+
+### 1) Root Hypermedia (HAL-FORMS)
+### Should include:
+### - _links.profile -> /AGENTS.md
+### - _links.authorization-server-metadata
+### - _links.oauth-protected-resource-metadata
+### - _templates.start-device-flow
+GET {{protectedApiUrl}}/
+Accept: application/prs.hal-forms+json
+
+
+### 2) Agent Contract / Profile
+GET {{protectedApiUrl}}/AGENTS.md
+Accept: text/markdown
+
+
+### 3) Auth Server Discovery Metadata
+### Inspect token and device endpoints exposed by auth-server.
+GET {{brokerUrl}}/.well-known/openid-configuration
+Accept: application/json
+
+### 3b) Protected Resource Metadata (RFC 9728)
+GET {{protectedApiUrl}}/.well-known/oauth-protected-resource
+Accept: application/json
+
+### 3c) Trigger 401 challenge and extract resource_metadata URL
+### Should return:
+### - 401 Unauthorized
+### - WWW-Authenticate: Bearer ... resource_metadata="..."
+### - application/problem+json body with detail explaining next steps
+# @name metadataChallenge
+GET {{protectedApiUrl}}/protected
+Accept: application/json
+
+> {%
+  const challenge =
+    response.headers.valueOf("WWW-Authenticate")
+    || response.headers.valueOf("www-authenticate")
+    || "";
+
+  client.global.set("wwwAuthenticate", challenge);
+  const match = /resource_metadata="([^"]+)"/.exec(challenge);
+  if (match) {
+    client.global.set("resourceMetadataUrl", match[1]);
+    client.log("resource_metadata extracted: " + match[1]);
+  } else {
+    client.log("resource_metadata not found in WWW-Authenticate: " + challenge);
+  }
+  client.log("problem detail: " + (response.body?.detail || "(missing)"));
+%}
+
+### 3d) Follow resource_metadata URL discovered from WWW-Authenticate
+### If step 3c did not extract the variable, run 3c first.
+GET {{resourceMetadataUrl}}
+Accept: application/json
+
+
+### 4) Start Device Authorization
+### This returns device_code, user_code, verification_uri, verification_uri_complete.
+### After running, open verification_uri_complete in browser and login/consent.
+# @name startDeviceAuthorization
+POST {{brokerUrl}}/oauth2/device_authorization
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+client_id={{clientId}}&client_secret={{clientSecret}}&scope={{scope}}
+
+> {%
+  client.global.set("deviceCode", response.body.device_code);
+  client.global.set("userCode", response.body.user_code);
+  client.global.set("verificationUri", response.body.verification_uri);
+  client.global.set("verificationUriComplete", response.body.verification_uri_complete || "");
+  client.global.set("pollInterval", response.body.interval || 5);
+
+  client.log("device_code saved to {{deviceCode}}");
+  client.log("user_code: " + response.body.user_code);
+  client.log("verification_uri: " + response.body.verification_uri);
+  client.log("verification_uri_complete: " + (response.body.verification_uri_complete || "(none)"));
+%}
+
+
+### 5) Poll Token Endpoint (rerun this request manually)
+### Before browser approval, response is usually:
+###   {"error":"authorization_pending"}
+### After approval, response contains access_token and this script saves {{accessToken}}.
+# @name pollToken
+POST {{brokerUrl}}/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code={{deviceCode}}&client_id={{clientId}}&client_secret={{clientSecret}}
+
+> {%
+  if (response.body.access_token) {
+    client.global.set("accessToken", response.body.access_token);
+    client.log("access_token saved to {{accessToken}}");
+  } else {
+    client.log("No access token yet. error=" + (response.body.error || "unknown"));
+  }
+%}
+
+
+### 6) Protected Call With Bearer Token
+### Requires a successful Step 5 that saved {{accessToken}}.
+GET {{protectedApiUrl}}/protected
+Authorization: Bearer {{accessToken}}
+Accept: application/json

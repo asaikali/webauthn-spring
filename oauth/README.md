@@ -11,6 +11,7 @@ This directory contains Spring Boot OAuth/OIDC samples grouped by role and flow 
 ## Project Layout
 
 * `auth-server` primary authorization server sample
+* `agent-protected-test-api` standalone protected API sample with problem-details and agent bootstrap hints
 * `protocol-walkthroughs` manual, comment-guided HTTP walkthroughs for learning the protocols step by step
 * `quotes-protected-resource` resource server that validates JWT access tokens
 * `token-introspection/quotes-introspection` resource server that validates tokens via introspection
@@ -36,6 +37,12 @@ These `.http` files are written as guided walkthroughs with comments between req
 2. Open [http://127.0.0.1:9090](http://127.0.0.1:9090)
 3. Login with `user/user`
 4. Inspect discovery metadata at [http://127.0.0.1:9090/.well-known/openid-configuration](http://127.0.0.1:9090/.well-known/openid-configuration)
+
+### Agent-Friendly Protected API
+
+1. Run `auth-server`
+2. Run `./mvnw -pl oauth/agent-protected-test-api spring-boot:run`
+3. Open [http://127.0.0.1:8082](http://127.0.0.1:8082)
 
 ### Authorization Code: Server Web App
 
